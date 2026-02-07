@@ -1,0 +1,119 @@
+import { useState } from 'react';
+import { CaretDown, CaretRight, User } from '@phosphor-icons/react';
+import { useItem } from '../lib/hooks';
+import { timeAgo } from '../lib/utils';
+
+const DEPTH_COLORS = [
+  'var(--color-accent)',
+  '#3b82f6',
+  '#10b981',
+  '#f59e0b',
+  '#8b5cf6',
+  '#ec4899',
+  '#06b6d4',
+  '#84cc16',
+];
+
+interface CommentProps {
+  commentId: number;
+  depth: number;
+  onUserClick: (id: string) => void;
+}
+
+function Comment({ commentId, depth, onUserClick }: CommentProps) {
+  const { data: comment, isLoading } = useItem(commentId);
+  const [collapsed, setCollapsed] = useState(false);
+
+  if (isLoading) {
+    return (
+      <div style={{ paddingLeft: depth > 0 ? 20 : 0 }}>
+        <div className="flex gap-3 py-2">
+          <div className="flex-1 space-y-1.5">
+            <div className="skeleton h-3 w-32" />
+            <div className="skeleton h-3 w-full" />
+            <div className="skeleton h-3 w-2/3" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!comment || comment.deleted || comment.dead) {
+    return null;
+  }
+
+  const color = DEPTH_COLORS[depth % DEPTH_COLORS.length];
+  const hasKids = comment.kids && comment.kids.length > 0;
+
+  return (
+    <div style={{ paddingLeft: depth > 0 ? 20 : 0 }}>
+      <div
+        className="border-l-2 pl-3 py-1.5 transition-colors"
+        style={{ borderColor: collapsed ? 'var(--color-edge)' : color }}
+      >
+        {/* Comment header */}
+        <div className="flex items-center gap-2 text-[11px]">
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className="text-fg-faint hover:text-fg transition-colors shrink-0"
+          >
+            {collapsed ? <CaretRight size={10} weight="bold" /> : <CaretDown size={10} weight="bold" />}
+          </button>
+          <button
+            onClick={() => comment.by && onUserClick(comment.by)}
+            className="font-medium text-fg-muted hover:text-accent transition-colors flex items-center gap-1"
+          >
+            <User size={10} />
+            {comment.by}
+          </button>
+          <span className="text-fg-faint">{timeAgo(comment.time)}</span>
+          {collapsed && hasKids && (
+            <span className="text-fg-faint">
+              [{comment.kids!.length} {comment.kids!.length === 1 ? 'reply' : 'replies'}]
+            </span>
+          )}
+        </div>
+
+        {/* Comment body */}
+        {!collapsed && (
+          <>
+            <div
+              className="comment-html text-[12.5px] text-fg leading-relaxed mt-1"
+              dangerouslySetInnerHTML={{ __html: comment.text || '' }}
+            />
+            {hasKids && (
+              <div className="mt-1">
+                {comment.kids!.map((kidId) => (
+                  <Comment key={kidId} commentId={kidId} depth={depth + 1} onUserClick={onUserClick} />
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+interface CommentTreeProps {
+  commentIds: number[];
+  onUserClick: (id: string) => void;
+}
+
+export function CommentTree({ commentIds, onUserClick }: CommentTreeProps) {
+  if (commentIds.length === 0) {
+    return (
+      <div className="text-center py-12 text-fg-faint text-xs">
+        No comments yet.
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-0.5">
+      {commentIds.map((id) => (
+        <Comment key={id} commentId={id} depth={0} onUserClick={onUserClick} />
+      ))}
+    </div>
+  );
+}

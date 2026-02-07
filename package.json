@@ -3,17 +3,22 @@
   "type": "module",
   "version": "0.0.1",
   "scripts": {
-    "dev": "astro dev",
-    "build": "astro build",
-    "preview": "astro preview",
+    "dev": "bun run --bun astro dev",
+    "build": "bun run --bun astro build",
+    "preview": "bun run --bun astro preview",
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/mdx": "^4.3.13",
+    "@astrojs/react": "^4.4.2",
+    "@astrojs/vercel": "^9.0.4",
+    "@phosphor-icons/react": "^2.1.10",
     "@tailwindcss/vite": "^4.1.18",
-    "@types/canvas-confetti": "^1.9.0",
+    "@tanstack/react-query": "^5.90.20",
+    "@types/react": "^19.2.13",
+    "@types/react-dom": "^19.2.3",
     "astro": "^5.17.1",
-    "canvas-confetti": "^1.9.4",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
     "tailwindcss": "^4.1.18"
   }
 }
