@@ -12,6 +12,7 @@
         "@types/react": "^19.2.13",
         "@types/react-dom": "^19.2.3",
         "astro": "^5.17.1",
+        "onedollarstats": "^0.0.11",
         "react": "^19.2.4",
         "react-dom": "^19.2.4",
         "tailwindcss": "^4.1.18",
@@ -746,6 +747,8 @@
     "ofetch": ["ofetch@1.5.1", "", { "dependencies": { "destr": "^2.0.5", "node-fetch-native": "^1.6.7", "ufo": "^1.6.1" } }, "sha512-2W4oUZlVaqAPAil6FUg/difl6YhqhUR7x2eZY4bQCko22UXg3hptq9KLQdqFClV+Wu85UX7hNtdGTngi/1BxcA=="],
 
     "ohash": ["ohash@2.0.11", "", {}, "sha512-RdR9FQrFwNBNXAr4GixM8YaRZRJ5PUWbKYbE5eOsrwAjJW0q2REGcf79oYPsLyskQCZG1PLN+S/K1V00joZAoQ=="],
+
+    "onedollarstats": ["onedollarstats@0.0.11", "", {}, "sha512-GboD/AZdfQB9Bhs0uupp40jG/F+yI4ed7rkUI6zbtXXqqKdo8qlT1ZqGATXF4zccBXnPylUvG7bYpiDyaONpjg=="],
 
     "oniguruma-parser": ["oniguruma-parser@0.12.1", "", {}, "sha512-8Unqkvk1RYc6yq2WBYRj4hdnsAxVze8i7iPfQr8e4uSP3tRv0rpZcbGUDvxfQQcdwHt/e9PrMvGCsa8OqG9X3w=="],
 

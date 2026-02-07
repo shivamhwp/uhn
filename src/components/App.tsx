@@ -99,7 +99,7 @@ function AppShell() {
         onSearch={goToSearch}
         onShowHelp={() => setShowHelp(true)}
       />
-      <main className="max-w-4xl mx-auto px-4 pt-14 pb-12">
+      <main className="max-w-4xl mx-auto px-3 sm:px-4 pt-14 pb-4 sm:pb-12">
         {route.view === 'feed' && (
           <StoryList
             key={route.feedType}
@@ -132,7 +132,7 @@ function AppShell() {
       <KeyboardHelp isOpen={showHelp} onClose={() => setShowHelp(false)} />
 
       {/* Credit */}
-      <div className="fixed bottom-0 right-4 h-7 flex items-center text-[9px] text-fg-faint/50 z-40">
+      <div className="fixed bottom-0 right-4 h-7 hidden sm:flex items-center text-[9px] text-fg-faint/50 z-40">
         made by{' '}
         <a
           href="https://claude.ai"

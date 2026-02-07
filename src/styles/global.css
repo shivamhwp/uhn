@@ -3,7 +3,8 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+  --font-sans: var(--font-switzer), system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, 'Cascadia Code', monospace;
 
   --color-bg: #f8f8f6;
   --color-surface: #ffffff;
@@ -39,15 +40,24 @@
 }
 
 html {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   background-color: var(--color-bg);
   color: var(--color-fg);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  --comment-indent: 20px;
+}
+
+@media (max-width: 640px) {
+  html {
+    --comment-indent: 12px;
+  }
 }
 
 body {
   transition: background-color 0.2s ease, color 0.2s ease;
+  overflow-x: hidden;
 }
 
 /* Scrollbar */
@@ -90,6 +100,8 @@ body {
   margin: 0.5em 0;
   font-size: 0.85em;
   line-height: 1.5;
+  max-width: 100%;
+  word-break: break-word;
 }
 .comment-html pre code {
   background: none;

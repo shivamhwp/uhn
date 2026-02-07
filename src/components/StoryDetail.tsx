@@ -156,7 +156,7 @@ export function StoryDetail({ storyId, onBack, onUserClick, onStoryClick }: Prop
       </div>
 
       {/* Bottom status bar */}
-      <div className="fixed bottom-0 left-0 right-0 h-7 bg-surface/80 backdrop-blur-sm border-t border-edge flex items-center justify-center gap-4 sm:gap-6 text-[10px] text-fg-faint z-30">
+      <div className="fixed bottom-0 left-0 right-0 h-7 bg-surface/80 backdrop-blur-sm border-t border-edge hidden sm:flex items-center justify-center gap-6 text-[10px] text-fg-faint z-30">
         <span>
           <kbd className="inline-block min-w-[16px] text-center px-1 py-0.5 bg-kbd border border-kbd-edge rounded text-[9px] mx-0.5">esc</kbd>
           {' '}back

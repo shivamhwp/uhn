@@ -256,7 +256,7 @@ export function SearchPanel({ onStoryClick, onUserClick, onBack }: Props) {
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center gap-3 mt-1 text-[11px] text-fg-muted">
+                      <div className="flex items-center flex-wrap gap-x-3 gap-y-0.5 mt-1 text-[11px] text-fg-muted">
                         <span>{hit.points} pts</span>
                         <button
                           onClick={(e) => {
@@ -318,8 +318,8 @@ export function SearchPanel({ onStoryClick, onUserClick, onBack }: Props) {
         )}
       </div>
 
-      {/* Status bar */}
-      <div className="fixed bottom-0 left-0 right-0 h-7 bg-surface/80 backdrop-blur-sm border-t border-edge flex items-center justify-center gap-4 sm:gap-6 text-[10px] text-fg-faint z-30">
+      {/* Status bar — keyboard hints, hidden on mobile */}
+      <div className="fixed bottom-0 left-0 right-0 h-7 bg-surface/80 backdrop-blur-sm border-t border-edge hidden sm:flex items-center justify-center gap-6 text-[10px] text-fg-faint z-30">
         <span>
           <kbd className="inline-block min-w-[16px] text-center px-1 py-0.5 bg-kbd border border-kbd-edge rounded text-[9px] mx-0.5">/</kbd>
           {' '}focus search

@@ -26,7 +26,7 @@ function Comment({ commentId, depth, onUserClick }: CommentProps) {
 
   if (isLoading) {
     return (
-      <div style={{ paddingLeft: depth > 0 ? 20 : 0 }}>
+      <div style={{ paddingLeft: depth > 0 ? 'var(--comment-indent)' : undefined }}>
         <div className="flex gap-3 py-2">
           <div className="flex-1 space-y-1.5">
             <div className="skeleton h-3 w-32" />
@@ -46,9 +46,9 @@ function Comment({ commentId, depth, onUserClick }: CommentProps) {
   const hasKids = comment.kids && comment.kids.length > 0;
 
   return (
-    <div style={{ paddingLeft: depth > 0 ? 20 : 0 }}>
+    <div style={{ paddingLeft: depth > 0 ? 'var(--comment-indent)' : undefined }}>
       <div
-        className="border-l-2 pl-3 py-1.5 transition-colors"
+        className="border-l-2 pl-3 py-1.5 transition-colors overflow-hidden"
         style={{ borderColor: collapsed ? 'var(--color-edge)' : color }}
       >
         {/* Comment header */}

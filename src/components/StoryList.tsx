@@ -198,8 +198,8 @@ export function StoryList({ feedType, onStoryClick, onUserClick, onSearch, onSho
         </div>
       </div>
 
-      {/* Status bar */}
-      <div className="fixed bottom-0 left-0 right-0 h-7 bg-surface/80 backdrop-blur-sm border-t border-edge flex items-center justify-center gap-4 sm:gap-6 text-[10px] text-fg-faint z-30">
+      {/* Status bar — keyboard hints, hidden on mobile (touch) */}
+      <div className="fixed bottom-0 left-0 right-0 h-7 bg-surface/80 backdrop-blur-sm border-t border-edge hidden sm:flex items-center justify-center gap-6 text-[10px] text-fg-faint z-30">
         <span>
           <kbd className="inline-block min-w-[16px] text-center px-1 py-0.5 bg-kbd border border-kbd-edge rounded text-[9px] mx-0.5">j</kbd>
           <kbd className="inline-block min-w-[16px] text-center px-1 py-0.5 bg-kbd border border-kbd-edge rounded text-[9px] mx-0.5">k</kbd>
@@ -209,7 +209,7 @@ export function StoryList({ feedType, onStoryClick, onUserClick, onSearch, onSho
           <kbd className="inline-block min-w-[16px] text-center px-1 py-0.5 bg-kbd border border-kbd-edge rounded text-[9px] mx-0.5">↵</kbd>
           {' '}open
         </span>
-        <span className="hidden sm:inline">
+        <span>
           <kbd className="inline-block min-w-[16px] text-center px-1 py-0.5 bg-kbd border border-kbd-edge rounded text-[9px] mx-0.5">o</kbd>
           {' '}url
         </span>
@@ -217,7 +217,7 @@ export function StoryList({ feedType, onStoryClick, onUserClick, onSearch, onSho
           <kbd className="inline-block min-w-[16px] text-center px-1 py-0.5 bg-kbd border border-kbd-edge rounded text-[9px] mx-0.5">/</kbd>
           {' '}search
         </span>
-        <span className="hidden sm:inline">
+        <span>
           <kbd className="inline-block min-w-[16px] text-center px-1 py-0.5 bg-kbd border border-kbd-edge rounded text-[9px] mx-0.5">?</kbd>
           {' '}help
         </span>
