@@ -1,11 +1,13 @@
 import {
   ArrowClockwise as ArrowClockwiseIcon,
   Briefcase as BriefcaseIcon,
+  CaretDown as CaretDownIcon,
   ChatCircle as ChatCircleIcon,
   Clock as ClockIcon,
   Eye as EyeIcon,
   Fire as FireIcon,
   Keyboard as KeyboardIcon,
+  List as ListIcon,
   MagnifyingGlass as MagnifyingGlassIcon,
   Moon as MoonIcon,
   Sun as SunIcon,
@@ -13,7 +15,7 @@ import {
   X as XIcon,
 } from "@phosphor-icons/react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { FeedType, Route } from "../lib/types";
 import { useTheme } from "./ThemeProvider";
 
@@ -21,14 +23,13 @@ const feeds: {
   type: FeedType;
   label: string;
   icon: typeof FireIcon;
-  key: string;
 }[] = [
-  { type: "top", label: "Top", icon: FireIcon, key: "1" },
-  { type: "new", label: "New", icon: ClockIcon, key: "2" },
-  { type: "best", label: "Best", icon: TrophyIcon, key: "3" },
-  { type: "ask", label: "Ask", icon: ChatCircleIcon, key: "4" },
-  { type: "show", label: "Show", icon: EyeIcon, key: "5" },
-  { type: "jobs", label: "Jobs", icon: BriefcaseIcon, key: "6" },
+  { type: "top", label: "Top", icon: FireIcon },
+  { type: "new", label: "New", icon: ClockIcon },
+  { type: "best", label: "Best", icon: TrophyIcon },
+  { type: "ask", label: "Ask", icon: ChatCircleIcon },
+  { type: "show", label: "Show", icon: EyeIcon },
+  { type: "jobs", label: "Jobs", icon: BriefcaseIcon },
 ];
 
 interface Props {
@@ -56,6 +57,10 @@ export function Header({
   const queryClient = useQueryClient();
   const activeFeed = route.view === "feed" ? route.feedType : null;
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const feedMenuRef = useRef<HTMLDivElement>(null);
+  const [isFeedMenuOpen, setIsFeedMenuOpen] = useState(false);
+  const activeFeedItem = feeds.find((feed) => feed.type === activeFeed) ?? feeds[0];
+  const ActiveFeedIcon = activeFeedItem.icon;
 
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ["storyIds"] });
@@ -64,11 +69,21 @@ export function Header({
   useEffect(() => {
     if (!searchOpen) return;
     searchInputRef.current?.focus();
+    setIsFeedMenuOpen(false);
   }, [searchOpen]);
+
+  useEffect(() => {
+    const handlePointerDown = (event: PointerEvent) => {
+      if (feedMenuRef.current?.contains(event.target as Node)) return;
+      setIsFeedMenuOpen(false);
+    };
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, []);
 
   return (
     <header className="fixed top-0 left-0 right-0 z-40 bg-bg/80 backdrop-blur-md border-b border-edge">
-      <div className="max-w-4xl mx-auto px-4 h-14 flex items-center gap-1.5">
+      <div className="max-w-5xl mx-auto px-4 md:px-5 h-14 md:h-15 flex items-center gap-1.5 md:gap-2">
         {/* Logo */}
         <button
           onClick={() => onFeedChange("top")}
@@ -78,7 +93,7 @@ export function Header({
           <img src="/favicon.svg" alt="" className="h-5 w-5 sm:h-6 sm:w-6" />
         </button>
 
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 relative" ref={feedMenuRef}>
           {searchOpen ? (
             <div className="relative w-full">
               <MagnifyingGlassIcon
@@ -105,33 +120,85 @@ export function Header({
               </button>
             </div>
           ) : (
-            <nav className="w-full flex items-center gap-1 overflow-x-auto scrollbar-none">
-              {feeds.map((feed) => {
-                const isActive = activeFeed === feed.type;
-                const Icon = feed.icon;
-                return (
-                  <button
-                    key={feed.type}
-                    onClick={() => onFeedChange(feed.type)}
-                    className={`h-9 min-w-[48px] sm:min-w-[74px] px-2.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap inline-flex items-center justify-center gap-1.5 ${
-                      isActive
-                        ? "bg-accent-subtle text-accent"
-                        : "text-fg-muted hover:text-fg hover:bg-surface-hover"
-                    }`}
-                  >
-                    <span className="inline-flex h-4 w-4 items-center justify-center">
-                      <Icon size={14} weight="regular" />
-                    </span>
-                    <span className="hidden sm:inline">{feed.label}</span>
-                  </button>
-                );
-              })}
-            </nav>
+            <>
+              <button
+                onClick={() => setIsFeedMenuOpen((open) => !open)}
+                className="md:hidden w-full h-10 px-3 rounded-md border border-edge bg-surface text-sm text-fg inline-flex items-center justify-between hover:bg-surface-hover transition-colors"
+                aria-haspopup="menu"
+                aria-expanded={isFeedMenuOpen}
+                aria-label="Open feed menu"
+              >
+                <span className="inline-flex items-center gap-2">
+                  <ListIcon size={16} className="text-fg-muted" />
+                  <span className="inline-flex items-center gap-1.5">
+                    <ActiveFeedIcon size={14} className="text-accent" />
+                    {activeFeedItem.label}
+                  </span>
+                </span>
+                <CaretDownIcon
+                  size={14}
+                  className={`text-fg-muted transition-transform ${isFeedMenuOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+
+              {isFeedMenuOpen && (
+                <div
+                  className="md:hidden absolute top-[calc(100%+0.5rem)] left-0 right-0 rounded-md border border-edge bg-surface shadow-lg p-1 animate-entry"
+                  role="menu"
+                >
+                  {feeds.map((feed) => {
+                    const isActive = activeFeed === feed.type;
+                    const Icon = feed.icon;
+                    return (
+                      <button
+                        key={feed.type}
+                        onClick={() => {
+                          onFeedChange(feed.type);
+                          setIsFeedMenuOpen(false);
+                        }}
+                        className={`w-full h-10 px-3 rounded-md text-sm transition-colors inline-flex items-center gap-2 ${
+                          isActive
+                            ? "bg-accent-subtle text-accent"
+                            : "text-fg-muted hover:text-fg hover:bg-surface-hover"
+                        }`}
+                        role="menuitem"
+                      >
+                        <Icon size={14} />
+                        {feed.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              <nav className="hidden md:flex w-full items-center gap-1.5">
+                {feeds.map((feed) => {
+                  const isActive = activeFeed === feed.type;
+                  const Icon = feed.icon;
+                  return (
+                    <button
+                      key={feed.type}
+                      onClick={() => onFeedChange(feed.type)}
+                      className={`h-9 min-w-[72px] px-3 rounded-md text-xs font-medium transition-colors whitespace-nowrap inline-flex items-center justify-center gap-1.5 ${
+                        isActive
+                          ? "bg-accent-subtle text-accent"
+                          : "text-fg-muted hover:text-fg hover:bg-surface-hover"
+                      }`}
+                    >
+                      <span className="inline-flex h-4 w-4 items-center justify-center">
+                        <Icon size={14} weight="regular" />
+                      </span>
+                      <span>{feed.label}</span>
+                    </button>
+                  );
+                })}
+              </nav>
+            </>
           )}
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-0.5">
+        <div className="flex items-center gap-0.5 md:ml-1 md:pl-2 md:border-l md:border-edge/70">
           <button
             onClick={handleRefresh}
             className="p-2 rounded-md text-fg-muted hover:text-fg hover:bg-surface-hover transition-colors"

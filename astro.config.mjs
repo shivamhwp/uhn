@@ -22,5 +22,13 @@ export default defineConfig({
   },
   vite: {
     plugins: [tailwindcss()],
+    resolve: {
+      dedupe: ["react", "react-dom"],
+    },
+    server: {
+      hmr: {
+        clientPort: 4321,
+      },
+    },
   },
 });

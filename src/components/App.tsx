@@ -1,16 +1,14 @@
-import { useState, useEffect, useCallback, useMemo, useSyncExternalStore } from "react";
-import { QueryClient } from "@tanstack/react-query";
-import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
-import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
-import { ThemeProvider } from "./ThemeProvider";
-import { Header } from "./Header";
-import { StoryList } from "./StoryList";
-import { StoryDetail } from "./StoryDetail";
-import { UserProfile } from "./UserProfile";
-import { SearchResultsList } from "./SearchResultsList";
-import { KeyboardShortcuts } from "./KeyboardShortcuts";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import type { FeedType, Route } from "../lib/types";
 import { isInputFocused } from "../lib/utils";
-import type { Route, FeedType } from "../lib/types";
+import { Header } from "./Header";
+import { KeyboardShortcuts } from "./KeyboardShortcuts";
+import { SearchResultsList } from "./SearchResultsList";
+import { StoryDetail } from "./StoryDetail";
+import { StoryList } from "./StoryList";
+import { ThemeProvider } from "./ThemeProvider";
+import { UserProfile } from "./UserProfile";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -20,11 +18,6 @@ const queryClient = new QueryClient({
       gcTime: 24 * 60 * 60 * 1000,
     },
   },
-});
-
-const persister = createSyncStoragePersister({
-  storage: window.localStorage,
-  key: "uhn-cache",
 });
 
 function parseHash(hash: string): Route {
@@ -139,7 +132,7 @@ function AppShell() {
         onSearchQueryChange={setSearchQuery}
         onToggleShortcuts={() => setShowShortcuts((s) => !s)}
       />
-      <main className="max-w-4xl mx-auto px-3 sm:px-4 pt-16 pb-4 sm:pb-12">
+      <main className="max-w-4xl mx-auto px-0.5 sm:px-4 pt-16 pb-4 sm:pb-12">
         {route.view === "feed" &&
           (searchOpen ? (
             <SearchResultsList
@@ -198,13 +191,10 @@ function AppShell() {
 
 export default function App() {
   return (
-    <PersistQueryClientProvider
-      client={queryClient}
-      persistOptions={{ persister, maxAge: 24 * 60 * 60 * 1000 }}
-    >
+    <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <AppShell />
       </ThemeProvider>
-    </PersistQueryClientProvider>
+    </QueryClientProvider>
   );
 }
