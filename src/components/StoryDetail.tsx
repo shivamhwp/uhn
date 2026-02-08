@@ -95,14 +95,14 @@ export function StoryDetail({ storyId, onBack, onUserClick, onStoryClick }: Prop
 
       {/* Story header */}
       <article>
-        <h1 className="text-base sm:text-lg font-semibold text-fg leading-snug">{story.title}</h1>
+        <h1 className="text-lg font-semibold text-fg leading-snug">{story.title}</h1>
 
         {domain && (
           <a
             href={story.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-xs text-accent hover:text-accent-hover mt-2 transition-colors"
+            className="inline-flex items-center gap-1.5 text-sm text-accent hover:text-accent-hover mt-2 transition-colors"
           >
             <ArrowSquareOut size={12} />
             {domain}
@@ -110,7 +110,7 @@ export function StoryDetail({ storyId, onBack, onUserClick, onStoryClick }: Prop
         )}
 
         {/* Meta */}
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3 text-[11px] text-fg-muted">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3 text-sm text-fg-muted">
           {story.score != null && (
             <span className="flex items-center gap-1">
               <ArrowFatUp size={12} weight="bold" className="text-accent" />
@@ -141,7 +141,7 @@ export function StoryDetail({ storyId, onBack, onUserClick, onStoryClick }: Prop
         {/* Story text (Ask HN, etc.) */}
         {story.text && (
           <div
-            className="story-html mt-4 p-4 bg-surface border border-edge rounded-lg text-[13px] text-fg leading-relaxed"
+            className="story-html mt-4 p-4 bg-surface border border-edge rounded-lg text-base text-fg leading-relaxed"
             dangerouslySetInnerHTML={{ __html: story.text }}
           />
         )}
@@ -155,23 +155,6 @@ export function StoryDetail({ storyId, onBack, onUserClick, onStoryClick }: Prop
         <CommentTree commentIds={story.kids ?? []} onUserClick={onUserClick} />
       </div>
 
-      {/* Bottom status bar */}
-      <div className="fixed bottom-0 left-0 right-0 h-7 bg-surface/80 backdrop-blur-sm border-t border-edge hidden sm:flex items-center justify-center gap-6 text-[10px] text-fg-faint z-30">
-        <span>
-          <kbd className="inline-block min-w-[16px] text-center px-1 py-0.5 bg-kbd border border-kbd-edge rounded text-[9px] mx-0.5">esc</kbd>
-          {' '}back
-        </span>
-        {story.url && (
-          <span>
-            <kbd className="inline-block min-w-[16px] text-center px-1 py-0.5 bg-kbd border border-kbd-edge rounded text-[9px] mx-0.5">o</kbd>
-            {' '}open url
-          </span>
-        )}
-        <span>
-          <kbd className="inline-block min-w-[16px] text-center px-1 py-0.5 bg-kbd border border-kbd-edge rounded text-[9px] mx-0.5">t</kbd>
-          {' '}theme
-        </span>
-      </div>
     </div>
   );
 }

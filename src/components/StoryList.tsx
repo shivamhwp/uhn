@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useWindowVirtualizer } from '@tanstack/react-virtual';
+import { useQueryClient } from '@tanstack/react-query';
 import { useStoryIds, useStoriesPage, usePrefetchItem, ITEMS_PER_PAGE } from '../lib/hooks';
 import { useTheme } from './ThemeProvider';
 import { isInputFocused } from '../lib/utils';
@@ -12,14 +13,15 @@ interface Props {
   onStoryClick: (id: number) => void;
   onUserClick: (id: string) => void;
   onSearch: () => void;
-  onShowHelp: () => void;
+  onToggleShortcuts: () => void;
 }
 
-export function StoryList({ feedType, onStoryClick, onUserClick, onSearch, onShowHelp }: Props) {
+export function StoryList({ feedType, onStoryClick, onUserClick, onSearch, onToggleShortcuts }: Props) {
   const [page, setPage] = useState(0);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
   const { toggle: toggleTheme } = useTheme();
+  const queryClient = useQueryClient();
   const prefetchItem = usePrefetchItem();
 
   const { data: allIds, isLoading: idsLoading } = useStoryIds(feedType);
@@ -103,7 +105,11 @@ export function StoryList({ feedType, onStoryClick, onUserClick, onSearch, onSho
           break;
         case '?':
           e.preventDefault();
-          onShowHelp();
+          onToggleShortcuts();
+          break;
+        case 'r':
+          e.preventDefault();
+          queryClient.invalidateQueries({ queryKey: ['storyIds'] });
           break;
         case ']':
           e.preventDefault();
@@ -126,7 +132,7 @@ export function StoryList({ feedType, onStoryClick, onUserClick, onSearch, onSho
 
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [stories, selectedIndex, hasMore, page, loadMore, virtualizer, onStoryClick, onSearch, onShowHelp, toggleTheme]);
+  }, [stories, selectedIndex, hasMore, page, loadMore, virtualizer, onStoryClick, onSearch, onToggleShortcuts, toggleTheme, queryClient]);
 
   if (idsLoading || isLoading) {
     return (
@@ -228,30 +234,6 @@ export function StoryList({ feedType, onStoryClick, onUserClick, onSearch, onSho
         </div>
       </div>
 
-      {/* Status bar — keyboard hints, hidden on mobile (touch) */}
-      <div className="fixed bottom-0 left-0 right-0 h-7 bg-surface/80 backdrop-blur-sm border-t border-edge hidden sm:flex items-center justify-center gap-6 text-[10px] text-fg-faint z-30">
-        <span>
-          <kbd className="inline-block min-w-[16px] text-center px-1 py-0.5 bg-kbd border border-kbd-edge rounded text-[9px] mx-0.5">j</kbd>
-          <kbd className="inline-block min-w-[16px] text-center px-1 py-0.5 bg-kbd border border-kbd-edge rounded text-[9px] mx-0.5">k</kbd>
-          {' '}navigate
-        </span>
-        <span>
-          <kbd className="inline-block min-w-[16px] text-center px-1 py-0.5 bg-kbd border border-kbd-edge rounded text-[9px] mx-0.5">↵</kbd>
-          {' '}open
-        </span>
-        <span>
-          <kbd className="inline-block min-w-[16px] text-center px-1 py-0.5 bg-kbd border border-kbd-edge rounded text-[9px] mx-0.5">o</kbd>
-          {' '}url
-        </span>
-        <span>
-          <kbd className="inline-block min-w-[16px] text-center px-1 py-0.5 bg-kbd border border-kbd-edge rounded text-[9px] mx-0.5">/</kbd>
-          {' '}search
-        </span>
-        <span>
-          <kbd className="inline-block min-w-[16px] text-center px-1 py-0.5 bg-kbd border border-kbd-edge rounded text-[9px] mx-0.5">?</kbd>
-          {' '}help
-        </span>
-      </div>
     </div>
   );
 }

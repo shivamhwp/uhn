@@ -51,21 +51,21 @@ export function StoryItem({
         {/* Title row */}
         <div className="flex items-baseline gap-2">
           <h3
-            className={`text-[13px] leading-snug font-medium ${
+            className={`text-lg leading-snug font-medium ${
               isSelected ? 'text-accent' : 'text-fg group-hover:text-accent'
             } transition-colors`}
           >
             {story.title}
           </h3>
           {domain && (
-            <span className="shrink-0 text-[11px] text-fg-faint hidden sm:inline">
+            <span className="shrink-0 text-sm text-fg-faint hidden sm:inline">
               ({domain})
             </span>
           )}
         </div>
 
         {/* Meta row */}
-        <div className="flex items-center flex-wrap gap-x-3 gap-y-0.5 mt-1 text-[11px] text-fg-muted">
+        <div className="flex items-center flex-wrap gap-x-3 gap-y-0.5 mt-1 text-sm text-fg-muted">
           {story.score != null && (
             <span className="flex items-center gap-1">
               <ArrowFatUp size={11} weight="bold" className="text-accent/70" />

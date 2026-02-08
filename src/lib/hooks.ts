@@ -8,8 +8,8 @@ export function useStoryIds(feedType: FeedType) {
   return useQuery({
     queryKey: ['storyIds', feedType],
     queryFn: () => fetchStoryIds(feedType),
-    staleTime: 5 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
+    staleTime: 30 * 60 * 1000,
+    gcTime: 24 * 60 * 60 * 1000,
   });
 }
 
@@ -22,8 +22,8 @@ export function useStoriesPage(ids: number[] | undefined, page: number) {
     queries: pageIds.map((id) => ({
       queryKey: ['item', id] as const,
       queryFn: () => fetchItem(id),
-      staleTime: 5 * 60 * 1000,
-      gcTime: 60 * 60 * 1000,
+      staleTime: Infinity,
+      gcTime: 24 * 60 * 60 * 1000,
     })),
   });
 
@@ -43,7 +43,7 @@ export function useItem(id: number | null) {
     queryFn: () => fetchItem(id!),
     enabled: id != null,
     staleTime: 5 * 60 * 1000,
-    gcTime: 60 * 60 * 1000,
+    gcTime: 24 * 60 * 60 * 1000,
   });
 }
 
@@ -53,7 +53,7 @@ export function useComments(ids: number[] | undefined) {
       queryKey: ['item', id] as const,
       queryFn: () => fetchItem(id),
       staleTime: 5 * 60 * 1000,
-      gcTime: 60 * 60 * 1000,
+      gcTime: 24 * 60 * 60 * 1000,
     })),
   });
 
@@ -71,7 +71,7 @@ export function useUser(id: string | null) {
     queryFn: () => fetchUser(id!),
     enabled: id != null,
     staleTime: 10 * 60 * 1000,
-    gcTime: 60 * 60 * 1000,
+    gcTime: 24 * 60 * 60 * 1000,
   });
 }
 
@@ -103,7 +103,7 @@ export function usePrefetchItem() {
     qc.prefetchQuery({
       queryKey: ['item', id],
       queryFn: () => fetchItem(id),
-      staleTime: 5 * 60 * 1000,
+      staleTime: Infinity,
     });
   };
 }

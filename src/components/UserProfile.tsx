@@ -23,8 +23,8 @@ export function UserProfile({ userId, onBack, onStoryClick }: Props) {
     queries: submissionIds.map((id) => ({
       queryKey: ['item', id] as const,
       queryFn: () => fetchItem(id),
-      staleTime: 5 * 60 * 1000,
-      gcTime: 60 * 60 * 1000,
+      staleTime: Infinity,
+      gcTime: 24 * 60 * 60 * 1000,
     })),
   });
 
@@ -83,7 +83,7 @@ export function UserProfile({ userId, onBack, onStoryClick }: Props) {
       {/* Profile header */}
       <div className="bg-surface border border-edge rounded-lg p-5">
         <h1 className="text-lg font-semibold text-fg">{user.id}</h1>
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-xs text-fg-muted">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-sm text-fg-muted">
           <span className="flex items-center gap-1.5">
             <Lightning size={13} weight="bold" className="text-accent" />
             {user.karma.toLocaleString()} karma
@@ -101,7 +101,7 @@ export function UserProfile({ userId, onBack, onStoryClick }: Props) {
         </div>
         {user.about && (
           <div
-            className="comment-html mt-3 pt-3 border-t border-edge text-[12.5px] text-fg-muted leading-relaxed"
+            className="comment-html mt-3 pt-3 border-t border-edge text-lg text-fg-muted leading-relaxed"
             dangerouslySetInnerHTML={{ __html: user.about }}
           />
         )}
@@ -120,15 +120,15 @@ export function UserProfile({ userId, onBack, onStoryClick }: Props) {
                 onClick={() => onStoryClick(story.id)}
                 className="w-full text-left px-3 py-2.5 rounded-md hover:bg-surface-hover transition-colors group"
               >
-                <div className="text-[13px] font-medium text-fg group-hover:text-accent transition-colors">
+                <div className="text-lg font-medium text-fg group-hover:text-accent transition-colors">
                   {story.title}
                   {story.url && (
-                    <span className="text-[11px] text-fg-faint font-normal ml-2">
+                    <span className="text-sm text-fg-faint font-normal ml-2">
                       ({extractDomain(story.url)})
                     </span>
                   )}
                 </div>
-                <div className="text-[11px] text-fg-muted mt-0.5">
+                <div className="text-sm text-fg-muted mt-0.5">
                   {story.score} pts · {timeAgo(story.time)}
                   {story.descendants != null && ` · ${story.descendants} comments`}
                 </div>

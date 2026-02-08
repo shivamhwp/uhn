@@ -3,6 +3,7 @@ import {
   Moon,
   Sun,
   Keyboard,
+  ArrowClockwise,
   Fire,
   Clock,
   Trophy,
@@ -10,6 +11,7 @@ import {
   Eye,
   Briefcase,
 } from '@phosphor-icons/react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useTheme } from './ThemeProvider';
 import type { Route, FeedType } from '../lib/types';
 
@@ -26,12 +28,17 @@ interface Props {
   route: Route;
   onFeedChange: (type: FeedType) => void;
   onSearch: () => void;
-  onShowHelp: () => void;
+  onToggleShortcuts: () => void;
 }
 
-export function Header({ route, onFeedChange, onSearch, onShowHelp }: Props) {
+export function Header({ route, onFeedChange, onSearch, onToggleShortcuts }: Props) {
   const { theme, toggle } = useTheme();
+  const queryClient = useQueryClient();
   const activeFeed = route.view === 'feed' ? route.feedType : null;
+
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ['storyIds'] });
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-40 bg-bg/80 backdrop-blur-md border-b border-edge">
@@ -75,6 +82,13 @@ export function Header({ route, onFeedChange, onSearch, onShowHelp }: Props) {
         {/* Actions */}
         <div className="flex items-center gap-0.5">
           <button
+            onClick={handleRefresh}
+            className="p-2 rounded-md text-fg-muted hover:text-fg hover:bg-surface-hover transition-colors"
+            title="Refresh feeds (r)"
+          >
+            <ArrowClockwise size={16} />
+          </button>
+          <button
             onClick={onSearch}
             className={`p-2 rounded-md transition-colors ${
               route.view === 'search'
@@ -93,8 +107,8 @@ export function Header({ route, onFeedChange, onSearch, onShowHelp }: Props) {
             {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
           </button>
           <button
-            onClick={onShowHelp}
-            className="p-2 rounded-md text-fg-muted hover:text-fg hover:bg-surface-hover transition-colors"
+            onClick={onToggleShortcuts}
+            className="p-2 rounded-md text-fg-muted hover:text-fg hover:bg-surface-hover transition-colors hidden sm:block"
             title="Keyboard shortcuts (?)"
           >
             <Keyboard size={16} />

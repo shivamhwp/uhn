@@ -52,7 +52,7 @@ function Comment({ commentId, depth, onUserClick }: CommentProps) {
         style={{ borderColor: collapsed ? 'var(--color-edge)' : color }}
       >
         {/* Comment header */}
-        <div className="flex items-center gap-2 text-[11px]">
+        <div className="flex items-center gap-2 text-sm">
           <button
             onClick={() => setCollapsed(!collapsed)}
             className="text-fg-faint hover:text-fg transition-colors shrink-0"
@@ -78,7 +78,7 @@ function Comment({ commentId, depth, onUserClick }: CommentProps) {
         {!collapsed && (
           <>
             <div
-              className="comment-html text-[12.5px] text-fg leading-relaxed mt-1"
+              className="comment-html text-base text-fg leading-relaxed mt-1"
               dangerouslySetInnerHTML={{ __html: comment.text || '' }}
             />
             {hasKids && (

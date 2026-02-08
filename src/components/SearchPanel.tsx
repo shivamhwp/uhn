@@ -242,7 +242,7 @@ export function SearchPanel({ onStoryClick, onUserClick, onBack }: Props) {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-baseline gap-2">
                         <h3
-                          className={`text-[13px] leading-snug font-medium ${
+                          className={`text-lg leading-snug font-medium ${
                             i === selectedIndex
                               ? 'text-accent'
                               : 'text-fg group-hover:text-accent'
@@ -251,12 +251,12 @@ export function SearchPanel({ onStoryClick, onUserClick, onBack }: Props) {
                           {hit.title}
                         </h3>
                         {domain && (
-                          <span className="shrink-0 text-[11px] text-fg-faint hidden sm:inline">
+                          <span className="shrink-0 text-sm text-fg-faint hidden sm:inline">
                             ({domain})
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center flex-wrap gap-x-3 gap-y-0.5 mt-1 text-[11px] text-fg-muted">
+                      <div className="flex items-center flex-wrap gap-x-3 gap-y-0.5 mt-1 text-sm text-fg-muted">
                         <span>{hit.points} pts</span>
                         <button
                           onClick={(e) => {
@@ -318,22 +318,6 @@ export function SearchPanel({ onStoryClick, onUserClick, onBack }: Props) {
         )}
       </div>
 
-      {/* Status bar — keyboard hints, hidden on mobile */}
-      <div className="fixed bottom-0 left-0 right-0 h-7 bg-surface/80 backdrop-blur-sm border-t border-edge hidden sm:flex items-center justify-center gap-6 text-[10px] text-fg-faint z-30">
-        <span>
-          <kbd className="inline-block min-w-[16px] text-center px-1 py-0.5 bg-kbd border border-kbd-edge rounded text-[9px] mx-0.5">/</kbd>
-          {' '}focus search
-        </span>
-        <span>
-          <kbd className="inline-block min-w-[16px] text-center px-1 py-0.5 bg-kbd border border-kbd-edge rounded text-[9px] mx-0.5">j</kbd>
-          <kbd className="inline-block min-w-[16px] text-center px-1 py-0.5 bg-kbd border border-kbd-edge rounded text-[9px] mx-0.5">k</kbd>
-          {' '}navigate
-        </span>
-        <span>
-          <kbd className="inline-block min-w-[16px] text-center px-1 py-0.5 bg-kbd border border-kbd-edge rounded text-[9px] mx-0.5">esc</kbd>
-          {' '}back
-        </span>
-      </div>
     </div>
   );
 }

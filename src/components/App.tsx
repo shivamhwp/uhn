@@ -1,12 +1,14 @@
 import { useState, useEffect, useCallback, useMemo, useSyncExternalStore } from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient } from '@tanstack/react-query';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
+import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister';
 import { ThemeProvider } from './ThemeProvider';
 import { Header } from './Header';
 import { StoryList } from './StoryList';
 import { StoryDetail } from './StoryDetail';
 import { UserProfile } from './UserProfile';
 import { SearchPanel } from './SearchPanel';
-import { KeyboardHelp } from './KeyboardHelp';
+import { KeyboardShortcuts } from './KeyboardShortcuts';
 import type { Route, FeedType } from '../lib/types';
 
 const queryClient = new QueryClient({
@@ -14,8 +16,14 @@ const queryClient = new QueryClient({
     queries: {
       retry: 2,
       refetchOnWindowFocus: false,
+      gcTime: 24 * 60 * 60 * 1000,
     },
   },
+});
+
+const persister = createSyncStoragePersister({
+  storage: window.localStorage,
+  key: 'uhn-cache',
 });
 
 function parseHash(hash: string): Route {
@@ -58,7 +66,7 @@ function getHashServerSnapshot() {
 function AppShell() {
   const hash = useSyncExternalStore(subscribeToHash, getHashSnapshot, getHashServerSnapshot);
   const route = useMemo(() => parseHash(hash), [hash]);
-  const [showHelp, setShowHelp] = useState(false);
+  const [showShortcuts, setShowShortcuts] = useState(true);
 
   // Scroll restoration after route change — legitimate DOM sync
   useEffect(() => {
@@ -97,7 +105,7 @@ function AppShell() {
         route={route}
         onFeedChange={goToFeed}
         onSearch={goToSearch}
-        onShowHelp={() => setShowHelp(true)}
+        onToggleShortcuts={() => setShowShortcuts((s) => !s)}
       />
       <main className="max-w-4xl mx-auto px-3 sm:px-4 pt-14 pb-4 sm:pb-12">
         {route.view === 'feed' && (
@@ -107,7 +115,7 @@ function AppShell() {
             onStoryClick={goToStory}
             onUserClick={goToUser}
             onSearch={goToSearch}
-            onShowHelp={() => setShowHelp(true)}
+            onToggleShortcuts={() => setShowShortcuts((s) => !s)}
           />
         )}
         {route.view === 'story' && (
@@ -129,7 +137,7 @@ function AppShell() {
           />
         )}
       </main>
-      <KeyboardHelp isOpen={showHelp} onClose={() => setShowHelp(false)} />
+      <KeyboardShortcuts isOpen={showShortcuts} onClose={() => setShowShortcuts(false)} />
 
       {/* Credit */}
       <div className="fixed bottom-0 right-4 h-7 hidden sm:flex items-center text-[9px] text-fg-faint/50 z-40">
@@ -158,10 +166,13 @@ function AppShell() {
 
 export default function App() {
   return (
-    <QueryClientProvider client={queryClient}>
+    <PersistQueryClientProvider
+      client={queryClient}
+      persistOptions={{ persister, maxAge: 24 * 60 * 60 * 1000 }}
+    >
       <ThemeProvider>
         <AppShell />
       </ThemeProvider>
-    </QueryClientProvider>
+    </PersistQueryClientProvider>
   );
 }
