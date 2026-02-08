@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useWindowVirtualizer } from '@tanstack/react-virtual';
 import { useStoryIds, useStoriesPage, usePrefetchItem, ITEMS_PER_PAGE } from '../lib/hooks';
 import { useTheme } from './ThemeProvider';
 import { isInputFocused } from '../lib/utils';
@@ -15,8 +16,6 @@ interface Props {
 }
 
 export function StoryList({ feedType, onStoryClick, onUserClick, onSearch, onShowHelp }: Props) {
-  // No reset useEffect needed — App renders <StoryList key={feedType}>
-  // so the component remounts with fresh state on feed change.
   const [page, setPage] = useState(0);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
@@ -29,19 +28,24 @@ export function StoryList({ feedType, onStoryClick, onUserClick, onSearch, onSho
   const hasMore = page < totalPages - 1;
 
   const loadMore = useCallback(() => {
-    if (hasMore) {
-      setPage((p) => p + 1);
-    }
+    if (hasMore) setPage((p) => p + 1);
   }, [hasMore]);
 
-  // Scroll helper — called directly in event handlers, no useEffect needed
-  const scrollToItem = useCallback((index: number) => {
-    requestAnimationFrame(() => {
-      listRef.current
-        ?.querySelector(`[data-rank="${index + 1}"]`)
-        ?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    });
+  // Measure list offset from top of document for window virtualizer
+  const parentOffsetRef = useRef(0);
+  useEffect(() => {
+    parentOffsetRef.current = listRef.current?.offsetTop ?? 0;
   }, []);
+
+  const virtualizer = useWindowVirtualizer({
+    count: stories.length,
+    estimateSize: () => 60,
+    overscan: 5,
+    scrollMargin: parentOffsetRef.current,
+    // Breathing room so selected item isn't pinned to viewport edges
+    scrollPaddingStart: 100,
+    scrollPaddingEnd: 280,
+  });
 
   // Keyboard navigation
   useEffect(() => {
@@ -64,7 +68,7 @@ export function StoryList({ feedType, onStoryClick, onUserClick, onSearch, onSho
           const next = Math.min(selectedIndex + 1, stories.length - 1);
           if (next >= stories.length - 3 && hasMore) loadMore();
           setSelectedIndex(next);
-          scrollToItem(next);
+          virtualizer.scrollToIndex(next, { align: 'auto', behavior: 'smooth' });
           break;
         }
         case 'k':
@@ -72,7 +76,7 @@ export function StoryList({ feedType, onStoryClick, onUserClick, onSearch, onSho
           e.preventDefault();
           const prev = Math.max(selectedIndex - 1, 0);
           setSelectedIndex(prev);
-          scrollToItem(prev);
+          virtualizer.scrollToIndex(prev, { align: 'auto', behavior: 'smooth' });
           break;
         }
         case 'Enter':
@@ -122,7 +126,7 @@ export function StoryList({ feedType, onStoryClick, onUserClick, onSearch, onSho
 
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [stories, selectedIndex, hasMore, page, loadMore, scrollToItem, onStoryClick, onSearch, onShowHelp, toggleTheme]);
+  }, [stories, selectedIndex, hasMore, page, loadMore, virtualizer, onStoryClick, onSearch, onShowHelp, toggleTheme]);
 
   if (idsLoading || isLoading) {
     return (
@@ -136,22 +140,48 @@ export function StoryList({ feedType, onStoryClick, onUserClick, onSearch, onSho
     );
   }
 
+  const virtualItems = virtualizer.getVirtualItems();
+
   return (
     <div ref={listRef} className="py-3">
-      {/* Stories */}
-      <div className="space-y-0.5">
-        {stories.map((story, i) => (
-          <StoryItem
-            key={story.id}
-            story={story}
-            rank={i + 1}
-            isSelected={i === selectedIndex}
-            onClick={() => onStoryClick(story.id)}
-            onUserClick={onUserClick}
-            onPrefetch={() => prefetchItem(story.id)}
-            style={{ animationDelay: `${Math.min(i, 15) * 20}ms` }}
-          />
-        ))}
+      {/* Virtualized story list */}
+      <div
+        style={{
+          height: virtualizer.getTotalSize(),
+          width: '100%',
+          position: 'relative',
+        }}
+      >
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            transform: `translateY(${(virtualItems[0]?.start ?? 0) - virtualizer.options.scrollMargin}px)`,
+          }}
+        >
+          {virtualItems.map((virtualRow) => {
+            const story = stories[virtualRow.index];
+            const i = virtualRow.index;
+            return (
+              <div
+                key={story.id}
+                data-index={virtualRow.index}
+                ref={virtualizer.measureElement}
+              >
+                <StoryItem
+                  story={story}
+                  rank={i + 1}
+                  isSelected={i === selectedIndex}
+                  onClick={() => onStoryClick(story.id)}
+                  onUserClick={onUserClick}
+                  onPrefetch={() => prefetchItem(story.id)}
+                />
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* Pagination */}

@@ -26,7 +26,7 @@ export function StoryItem({
   return (
     <div
       data-rank={rank}
-      className={`animate-entry group relative flex gap-3 px-3 py-2.5 rounded-md cursor-pointer transition-all duration-150 ${
+      className={`group relative flex gap-3 px-3 py-2.5 rounded-md cursor-pointer transition-all duration-150 ${
         isSelected
           ? 'bg-accent-subtle ring-1 ring-accent/20'
           : 'hover:bg-surface-hover'
