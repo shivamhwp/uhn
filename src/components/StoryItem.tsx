@@ -1,12 +1,13 @@
-import { ArrowSquareOut, ChatCircle, ArrowFatUp, User } from '@phosphor-icons/react';
-import { timeAgo, extractDomain } from '../lib/utils';
-import type { HNItem } from '../lib/types';
+import { ArrowSquareOut, ChatCircle, ArrowFatUp, User } from "@phosphor-icons/react";
+import { timeAgo, extractDomain } from "../lib/utils";
+import type { HNItem } from "../lib/types";
 
 interface Props {
   story: HNItem;
   rank: number;
   isSelected: boolean;
   onClick: () => void;
+  onHover: () => void;
   onUserClick: (id: string) => void;
   onPrefetch: () => void;
   style?: React.CSSProperties;
@@ -17,6 +18,7 @@ export function StoryItem({
   rank,
   isSelected,
   onClick,
+  onHover,
   onUserClick,
   onPrefetch,
   style,
@@ -26,20 +28,21 @@ export function StoryItem({
   return (
     <div
       data-rank={rank}
-      className={`group relative flex gap-3 px-3 py-2.5 rounded-md cursor-pointer transition-all duration-150 ${
-        isSelected
-          ? 'bg-accent-subtle ring-1 ring-accent/20'
-          : 'hover:bg-surface-hover'
+      className={`group relative flex gap-3 px-3 py-2.5 rounded-none sm:rounded-md cursor-pointer transition-all duration-150 ${
+        isSelected ? "sm:bg-accent-subtle sm:ring-1 sm:ring-accent/20" : "sm:hover:bg-surface-hover"
       }`}
       onClick={onClick}
-      onMouseEnter={onPrefetch}
+      onMouseEnter={() => {
+        onHover();
+        onPrefetch();
+      }}
       style={style}
     >
       {/* Rank number */}
       <div className="shrink-0 w-8 text-right">
         <span
           className={`text-xs tabular-nums ${
-            isSelected ? 'text-accent font-semibold' : 'text-fg-faint'
+            isSelected ? "text-fg-faint sm:text-accent sm:font-semibold" : "text-fg-faint"
           }`}
         >
           {rank}
@@ -52,15 +55,13 @@ export function StoryItem({
         <div className="flex items-baseline gap-2">
           <h3
             className={`text-lg leading-snug font-medium ${
-              isSelected ? 'text-accent' : 'text-fg group-hover:text-accent'
+              isSelected ? "text-fg sm:text-accent" : "text-fg sm:group-hover:text-accent"
             } transition-colors`}
           >
             {story.title}
           </h3>
           {domain && (
-            <span className="shrink-0 text-sm text-fg-faint hidden sm:inline">
-              ({domain})
-            </span>
+            <span className="shrink-0 text-sm text-fg-faint hidden sm:inline">({domain})</span>
           )}
         </div>
 

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   ArrowLeft,
   MagnifyingGlass,
@@ -8,11 +8,11 @@ import {
   X,
   CaretLeft,
   CaretRight,
-} from '@phosphor-icons/react';
-import { useSearch } from '../lib/hooks';
-import { timeAgo, extractDomain, isInputFocused } from '../lib/utils';
-import { useTheme } from './ThemeProvider';
-import type { SearchFilters } from '../lib/types';
+} from "@phosphor-icons/react";
+import { useSearch } from "../lib/hooks";
+import { timeAgo, extractDomain, isInputFocused } from "../lib/utils";
+import { useTheme } from "./ThemeProvider";
+import type { SearchFilters } from "../lib/types";
 
 interface Props {
   onStoryClick: (id: number) => void;
@@ -24,9 +24,9 @@ export function SearchPanel({ onStoryClick, onUserClick, onBack }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const { toggle: toggleTheme } = useTheme();
   const [filters, setFilters] = useState<SearchFilters>({
-    query: '',
-    dateFrom: '',
-    dateTo: '',
+    query: "",
+    dateFrom: "",
+    dateTo: "",
     page: 0,
   });
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -44,7 +44,7 @@ export function SearchPanel({ onStoryClick, onUserClick, onBack }: Props) {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       // Allow typing in inputs
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         e.preventDefault();
         if (document.activeElement === inputRef.current) {
           inputRef.current?.blur();
@@ -57,49 +57,49 @@ export function SearchPanel({ onStoryClick, onUserClick, onBack }: Props) {
       if (isInputFocused()) return;
 
       switch (e.key) {
-        case 'j':
-        case 'ArrowDown':
+        case "j":
+        case "ArrowDown":
           e.preventDefault();
           setSelectedIndex((i) => Math.min(i + 1, hits.length - 1));
           break;
-        case 'k':
-        case 'ArrowUp':
+        case "k":
+        case "ArrowUp":
           e.preventDefault();
           setSelectedIndex((i) => Math.max(i - 1, 0));
           break;
-        case 'Enter':
+        case "Enter":
           e.preventDefault();
           if (hits[selectedIndex]) {
             onStoryClick(Number(hits[selectedIndex].objectID));
           }
           break;
-        case 'o': {
+        case "o": {
           e.preventDefault();
           const hit = hits[selectedIndex];
-          if (hit?.url) window.open(hit.url, '_blank', 'noopener,noreferrer');
+          if (hit?.url) window.open(hit.url, "_blank", "noopener,noreferrer");
           break;
         }
-        case '/':
+        case "/":
           e.preventDefault();
           inputRef.current?.focus();
           break;
-        case 'h':
-        case 'Backspace':
+        case "h":
+        case "Backspace":
           e.preventDefault();
           onBack();
           break;
-        case 't':
+        case "t":
           e.preventDefault();
           toggleTheme();
           break;
-        case ']':
+        case "]":
           e.preventDefault();
           if (data && filters.page < data.nbPages - 1) {
             setFilters((prev) => ({ ...prev, page: prev.page + 1 }));
             setSelectedIndex(0);
           }
           break;
-        case '[':
+        case "[":
           e.preventDefault();
           if (filters.page > 0) {
             setFilters((prev) => ({ ...prev, page: prev.page - 1 }));
@@ -108,8 +108,8 @@ export function SearchPanel({ onStoryClick, onUserClick, onBack }: Props) {
           break;
       }
     };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
   }, [hits, selectedIndex, data, filters.page, onBack, onStoryClick, toggleTheme]);
 
   const hasFilters = filters.query || filters.dateFrom || filters.dateTo;
@@ -146,7 +146,7 @@ export function SearchPanel({ onStoryClick, onUserClick, onBack }: Props) {
           />
           {filters.query && (
             <button
-              onClick={() => updateFilter({ query: '' })}
+              onClick={() => updateFilter({ query: "" })}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-fg-faint hover:text-fg transition-colors"
             >
               <X size={14} />
@@ -175,7 +175,7 @@ export function SearchPanel({ onStoryClick, onUserClick, onBack }: Props) {
           />
           {(filters.dateFrom || filters.dateTo) && (
             <button
-              onClick={() => updateFilter({ dateFrom: '', dateTo: '' })}
+              onClick={() => updateFilter({ dateFrom: "", dateTo: "" })}
               className="text-[11px] text-danger hover:underline"
             >
               Clear dates
@@ -226,14 +226,14 @@ export function SearchPanel({ onStoryClick, onUserClick, onBack }: Props) {
                     onClick={() => onStoryClick(Number(hit.objectID))}
                     className={`group flex gap-3 px-3 py-2.5 rounded-md cursor-pointer transition-all duration-150 ${
                       i === selectedIndex
-                        ? 'bg-accent-subtle ring-1 ring-accent/20'
-                        : 'hover:bg-surface-hover'
+                        ? "bg-accent-subtle ring-1 ring-accent/20"
+                        : "hover:bg-surface-hover"
                     }`}
                   >
                     <div className="shrink-0 w-8 text-right">
                       <span
                         className={`text-xs tabular-nums ${
-                          i === selectedIndex ? 'text-accent font-semibold' : 'text-fg-faint'
+                          i === selectedIndex ? "text-accent font-semibold" : "text-fg-faint"
                         }`}
                       >
                         {filters.page * 30 + i + 1}
@@ -243,9 +243,7 @@ export function SearchPanel({ onStoryClick, onUserClick, onBack }: Props) {
                       <div className="flex items-baseline gap-2">
                         <h3
                           className={`text-lg leading-snug font-medium ${
-                            i === selectedIndex
-                              ? 'text-accent'
-                              : 'text-fg group-hover:text-accent'
+                            i === selectedIndex ? "text-accent" : "text-fg group-hover:text-accent"
                           } transition-colors`}
                         >
                           {hit.title}
@@ -317,7 +315,6 @@ export function SearchPanel({ onStoryClick, onUserClick, onBack }: Props) {
           </>
         )}
       </div>
-
     </div>
   );
 }

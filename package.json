@@ -1,16 +1,21 @@
 {
   "name": "usable-hn",
-  "type": "module",
   "version": "0.0.1",
+  "type": "module",
   "scripts": {
     "dev": "bun run --bun astro dev",
     "build": "bun run --bun astro build",
     "preview": "bun run --bun astro preview",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
+    "fmt": "oxfmt",
+    "fmt:check": "oxfmt --check",
     "astro": "astro"
   },
   "dependencies": {
     "@astrojs/react": "^4.4.2",
     "@astrojs/vercel": "^9.0.4",
+    "@nanostores/react": "^1.0.0",
     "@phosphor-icons/react": "^2.1.10",
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/query-sync-storage-persister": "^5.90.22",
@@ -20,9 +25,14 @@
     "@types/react": "^19.2.13",
     "@types/react-dom": "^19.2.3",
     "astro": "^5.17.1",
+    "nanostores": "^1.1.0",
     "onedollarstats": "^0.0.11",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "tailwindcss": "^4.1.18"
+  },
+  "devDependencies": {
+    "oxfmt": "^0.28.0",
+    "oxlint": "^1.43.0"
   }
 }

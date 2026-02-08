@@ -36,14 +36,14 @@ bun run dev
 
 ## Keyboard Shortcuts
 
-| Key | Action |
-|-----|--------|
-| `j` / `k` | Move down / up |
-| `Enter` | Open story |
-| `o` | Open link in new tab |
-| `h` / `Esc` | Go back |
-| `1`-`6` | Switch feed |
-| `/` | Search |
-| `t` | Toggle theme |
-| `[` / `]` | Previous / next page |
-| `?` | Show all shortcuts |
+| Key         | Action               |
+| ----------- | -------------------- |
+| `j` / `k`   | Move down / up       |
+| `Enter`     | Open story           |
+| `o`         | Open link in new tab |
+| `h` / `Esc` | Go back              |
+| `1`-`6`     | Switch feed          |
+| `/`         | Search               |
+| `t`         | Toggle theme         |
+| `[` / `]`   | Previous / next page |
+| `?`         | Show all shortcuts   |

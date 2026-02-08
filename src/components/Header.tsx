@@ -1,83 +1,134 @@
 import {
-  MagnifyingGlass,
-  Moon,
-  Sun,
-  Keyboard,
-  ArrowClockwise,
-  Fire,
-  Clock,
-  Trophy,
-  ChatCircle,
-  Eye,
-  Briefcase,
-} from '@phosphor-icons/react';
-import { useQueryClient } from '@tanstack/react-query';
-import { useTheme } from './ThemeProvider';
-import type { Route, FeedType } from '../lib/types';
+  ArrowClockwise as ArrowClockwiseIcon,
+  Briefcase as BriefcaseIcon,
+  ChatCircle as ChatCircleIcon,
+  Clock as ClockIcon,
+  Eye as EyeIcon,
+  Fire as FireIcon,
+  Keyboard as KeyboardIcon,
+  MagnifyingGlass as MagnifyingGlassIcon,
+  Moon as MoonIcon,
+  Sun as SunIcon,
+  Trophy as TrophyIcon,
+  X as XIcon,
+} from "@phosphor-icons/react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useEffect, useRef } from "react";
+import type { FeedType, Route } from "../lib/types";
+import { useTheme } from "./ThemeProvider";
 
-const feeds: { type: FeedType; label: string; icon: typeof Fire; key: string }[] = [
-  { type: 'top', label: 'Top', icon: Fire, key: '1' },
-  { type: 'new', label: 'New', icon: Clock, key: '2' },
-  { type: 'best', label: 'Best', icon: Trophy, key: '3' },
-  { type: 'ask', label: 'Ask', icon: ChatCircle, key: '4' },
-  { type: 'show', label: 'Show', icon: Eye, key: '5' },
-  { type: 'jobs', label: 'Jobs', icon: Briefcase, key: '6' },
+const feeds: {
+  type: FeedType;
+  label: string;
+  icon: typeof FireIcon;
+  key: string;
+}[] = [
+  { type: "top", label: "Top", icon: FireIcon, key: "1" },
+  { type: "new", label: "New", icon: ClockIcon, key: "2" },
+  { type: "best", label: "Best", icon: TrophyIcon, key: "3" },
+  { type: "ask", label: "Ask", icon: ChatCircleIcon, key: "4" },
+  { type: "show", label: "Show", icon: EyeIcon, key: "5" },
+  { type: "jobs", label: "Jobs", icon: BriefcaseIcon, key: "6" },
 ];
 
 interface Props {
   route: Route;
   onFeedChange: (type: FeedType) => void;
-  onSearch: () => void;
+  searchOpen: boolean;
+  searchQuery: string;
+  onSearchOpen: () => void;
+  onSearchClose: () => void;
+  onSearchQueryChange: (query: string) => void;
   onToggleShortcuts: () => void;
 }
 
-export function Header({ route, onFeedChange, onSearch, onToggleShortcuts }: Props) {
+export function Header({
+  route,
+  onFeedChange,
+  searchOpen,
+  searchQuery,
+  onSearchOpen,
+  onSearchClose,
+  onSearchQueryChange,
+  onToggleShortcuts,
+}: Props) {
   const { theme, toggle } = useTheme();
   const queryClient = useQueryClient();
-  const activeFeed = route.view === 'feed' ? route.feedType : null;
+  const activeFeed = route.view === "feed" ? route.feedType : null;
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const handleRefresh = () => {
-    queryClient.invalidateQueries({ queryKey: ['storyIds'] });
+    queryClient.invalidateQueries({ queryKey: ["storyIds"] });
   };
+
+  useEffect(() => {
+    if (!searchOpen) return;
+    searchInputRef.current?.focus();
+  }, [searchOpen]);
 
   return (
     <header className="fixed top-0 left-0 right-0 z-40 bg-bg/80 backdrop-blur-md border-b border-edge">
-      <div className="max-w-4xl mx-auto px-4 h-12 flex items-center gap-1">
+      <div className="max-w-4xl mx-auto px-4 h-14 flex items-center gap-1.5">
         {/* Logo */}
         <button
-          onClick={() => onFeedChange('top')}
-          className="mr-3 shrink-0 group"
+          onClick={() => onFeedChange("top")}
+          className="shrink-0 group rounded-md p-1 hover:bg-surface-hover transition-colors"
+          aria-label="Go to top stories"
         >
-          <span className="text-[15px] font-bold tracking-tight group-hover:opacity-80 transition-opacity">
-            <span className="text-accent">u</span>
-            <span className="text-fg">hn</span>
-          </span>
+          <img src="/favicon.svg" alt="" className="h-5 w-5 sm:h-6 sm:w-6" />
         </button>
 
-        {/* Feed tabs */}
-        <nav className="flex items-center gap-0.5 overflow-x-auto scrollbar-none">
-          {feeds.map((feed) => {
-            const isActive = activeFeed === feed.type;
-            const Icon = feed.icon;
-            return (
+        <div className="flex-1 min-w-0">
+          {searchOpen ? (
+            <div className="relative w-full">
+              <MagnifyingGlassIcon
+                size={16}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-fg-faint"
+              />
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchQuery}
+                onChange={(e) => onSearchQueryChange(e.target.value)}
+                placeholder="Search stories..."
+                className="w-full h-10 box-border pl-9 pr-9 rounded-md border border-edge bg-surface text-sm text-fg placeholder:text-fg-faint focus:outline-none focus:ring-1 focus:ring-accent/30 focus:border-accent/50"
+              />
               <button
-                key={feed.type}
-                onClick={() => onFeedChange(feed.type)}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all whitespace-nowrap ${
-                  isActive
-                    ? 'bg-accent-subtle text-accent'
-                    : 'text-fg-muted hover:text-fg hover:bg-surface-hover'
+                onClick={() => onSearchQueryChange("")}
+                className={`absolute right-2 top-1/2 -translate-y-1/2 transition-colors p-1 ${
+                  searchQuery ? "text-fg-faint hover:text-fg" : "invisible pointer-events-none"
                 }`}
+                aria-label="Clear search"
+                tabIndex={searchQuery ? 0 : -1}
               >
-                <Icon size={14} weight={isActive ? 'fill' : 'regular'} />
-                <span className="hidden sm:inline">{feed.label}</span>
+                <XIcon size={14} />
               </button>
-            );
-          })}
-        </nav>
-
-        {/* Spacer */}
-        <div className="flex-1" />
+            </div>
+          ) : (
+            <nav className="w-full flex items-center gap-1 overflow-x-auto scrollbar-none">
+              {feeds.map((feed) => {
+                const isActive = activeFeed === feed.type;
+                const Icon = feed.icon;
+                return (
+                  <button
+                    key={feed.type}
+                    onClick={() => onFeedChange(feed.type)}
+                    className={`h-9 min-w-[48px] sm:min-w-[74px] px-2.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap inline-flex items-center justify-center gap-1.5 ${
+                      isActive
+                        ? "bg-accent-subtle text-accent"
+                        : "text-fg-muted hover:text-fg hover:bg-surface-hover"
+                    }`}
+                  >
+                    <span className="inline-flex h-4 w-4 items-center justify-center">
+                      <Icon size={14} weight="regular" />
+                    </span>
+                    <span className="hidden sm:inline">{feed.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
+          )}
+        </div>
 
         {/* Actions */}
         <div className="flex items-center gap-0.5">
@@ -86,32 +137,35 @@ export function Header({ route, onFeedChange, onSearch, onToggleShortcuts }: Pro
             className="p-2 rounded-md text-fg-muted hover:text-fg hover:bg-surface-hover transition-colors"
             title="Refresh feeds (r)"
           >
-            <ArrowClockwise size={16} />
+            <ArrowClockwiseIcon size={16} />
           </button>
           <button
-            onClick={onSearch}
+            onClick={() => {
+              if (searchOpen) onSearchClose();
+              else onSearchOpen();
+            }}
             className={`p-2 rounded-md transition-colors ${
-              route.view === 'search'
-                ? 'text-accent bg-accent-subtle'
-                : 'text-fg-muted hover:text-fg hover:bg-surface-hover'
+              searchOpen
+                ? "text-accent bg-accent-subtle"
+                : "text-fg-muted hover:text-fg hover:bg-surface-hover"
             }`}
             title="Search (/)"
           >
-            <MagnifyingGlass size={16} />
+            <MagnifyingGlassIcon size={16} />
           </button>
           <button
             onClick={toggle}
             className="p-2 rounded-md text-fg-muted hover:text-fg hover:bg-surface-hover transition-colors"
             title="Toggle theme (t)"
           >
-            {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+            {theme === "dark" ? <SunIcon size={16} /> : <MoonIcon size={16} />}
           </button>
           <button
             onClick={onToggleShortcuts}
             className="p-2 rounded-md text-fg-muted hover:text-fg hover:bg-surface-hover transition-colors hidden sm:block"
             title="Keyboard shortcuts (?)"
           >
-            <Keyboard size={16} />
+            <KeyboardIcon size={16} />
           </button>
         </div>
       </div>

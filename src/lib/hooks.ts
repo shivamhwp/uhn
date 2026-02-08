@@ -1,12 +1,12 @@
-import { useQuery, useQueries, useQueryClient } from '@tanstack/react-query';
-import { fetchItem, fetchUser, fetchStoryIds, searchStories } from './api';
-import type { FeedType, HNItem, SearchFilters } from './types';
+import { useQuery, useQueries, useQueryClient } from "@tanstack/react-query";
+import { fetchItem, fetchUser, fetchStoryIds, searchStories } from "./api";
+import type { FeedType, HNItem, SearchFilters } from "./types";
 
 export const ITEMS_PER_PAGE = 30;
 
 export function useStoryIds(feedType: FeedType) {
   return useQuery({
-    queryKey: ['storyIds', feedType],
+    queryKey: ["storyIds", feedType],
     queryFn: () => fetchStoryIds(feedType),
     staleTime: 30 * 60 * 1000,
     gcTime: 24 * 60 * 60 * 1000,
@@ -20,7 +20,7 @@ export function useStoriesPage(ids: number[] | undefined, page: number) {
 
   const queries = useQueries({
     queries: pageIds.map((id) => ({
-      queryKey: ['item', id] as const,
+      queryKey: ["item", id] as const,
       queryFn: () => fetchItem(id),
       staleTime: Infinity,
       gcTime: 24 * 60 * 60 * 1000,
@@ -39,7 +39,7 @@ export function useStoriesPage(ids: number[] | undefined, page: number) {
 
 export function useItem(id: number | null) {
   return useQuery({
-    queryKey: ['item', id],
+    queryKey: ["item", id],
     queryFn: () => fetchItem(id!),
     enabled: id != null,
     staleTime: 5 * 60 * 1000,
@@ -50,7 +50,7 @@ export function useItem(id: number | null) {
 export function useComments(ids: number[] | undefined) {
   const queries = useQueries({
     queries: (ids ?? []).map((id) => ({
-      queryKey: ['item', id] as const,
+      queryKey: ["item", id] as const,
       queryFn: () => fetchItem(id),
       staleTime: 5 * 60 * 1000,
       gcTime: 24 * 60 * 60 * 1000,
@@ -58,16 +58,14 @@ export function useComments(ids: number[] | undefined) {
   });
 
   return {
-    comments: queries
-      .map((q) => q.data)
-      .filter((item): item is HNItem => item != null),
+    comments: queries.map((q) => q.data).filter((item): item is HNItem => item != null),
     isLoading: queries.some((q) => q.isLoading),
   };
 }
 
 export function useUser(id: string | null) {
   return useQuery({
-    queryKey: ['user', id],
+    queryKey: ["user", id],
     queryFn: () => fetchUser(id!),
     enabled: id != null,
     staleTime: 10 * 60 * 1000,
@@ -78,7 +76,7 @@ export function useUser(id: string | null) {
 export function useSearch(filters: SearchFilters) {
   const hasQuery = filters.query.length > 0 || !!filters.dateFrom || !!filters.dateTo;
   return useQuery({
-    queryKey: ['search', filters],
+    queryKey: ["search", filters],
     queryFn: () =>
       searchStories({
         query: filters.query,
@@ -87,7 +85,7 @@ export function useSearch(filters: SearchFilters) {
           ? Math.floor(new Date(filters.dateFrom).getTime() / 1000)
           : undefined,
         dateTo: filters.dateTo
-          ? Math.floor(new Date(filters.dateTo + 'T23:59:59').getTime() / 1000)
+          ? Math.floor(new Date(filters.dateTo + "T23:59:59").getTime() / 1000)
           : undefined,
       }),
     enabled: hasQuery,
@@ -101,7 +99,7 @@ export function usePrefetchItem() {
   const qc = useQueryClient();
   return (id: number) => {
     qc.prefetchQuery({
-      queryKey: ['item', id],
+      queryKey: ["item", id],
       queryFn: () => fetchItem(id),
       staleTime: Infinity,
     });

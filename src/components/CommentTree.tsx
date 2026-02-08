@@ -1,17 +1,17 @@
-import { useState } from 'react';
-import { CaretDown, CaretRight, User } from '@phosphor-icons/react';
-import { useItem } from '../lib/hooks';
-import { timeAgo } from '../lib/utils';
+import { useState } from "react";
+import { CaretDown, CaretRight, User } from "@phosphor-icons/react";
+import { useItem } from "../lib/hooks";
+import { timeAgo } from "../lib/utils";
 
 const DEPTH_COLORS = [
-  'var(--color-accent)',
-  '#3b82f6',
-  '#10b981',
-  '#f59e0b',
-  '#8b5cf6',
-  '#ec4899',
-  '#06b6d4',
-  '#84cc16',
+  "var(--color-accent)",
+  "#3b82f6",
+  "#10b981",
+  "#f59e0b",
+  "#8b5cf6",
+  "#ec4899",
+  "#06b6d4",
+  "#84cc16",
 ];
 
 interface CommentProps {
@@ -26,7 +26,7 @@ function Comment({ commentId, depth, onUserClick }: CommentProps) {
 
   if (isLoading) {
     return (
-      <div style={{ paddingLeft: depth > 0 ? 'var(--comment-indent)' : undefined }}>
+      <div style={{ paddingLeft: depth > 0 ? "var(--comment-indent)" : undefined }}>
         <div className="flex gap-3 py-2">
           <div className="flex-1 space-y-1.5">
             <div className="skeleton h-3 w-32" />
@@ -46,10 +46,10 @@ function Comment({ commentId, depth, onUserClick }: CommentProps) {
   const hasKids = comment.kids && comment.kids.length > 0;
 
   return (
-    <div style={{ paddingLeft: depth > 0 ? 'var(--comment-indent)' : undefined }}>
+    <div style={{ paddingLeft: depth > 0 ? "var(--comment-indent)" : undefined }}>
       <div
         className="border-l-2 pl-3 py-1.5 transition-colors overflow-hidden"
-        style={{ borderColor: collapsed ? 'var(--color-edge)' : color }}
+        style={{ borderColor: collapsed ? "var(--color-edge)" : color }}
       >
         {/* Comment header */}
         <div className="flex items-center gap-2 text-sm">
@@ -57,7 +57,11 @@ function Comment({ commentId, depth, onUserClick }: CommentProps) {
             onClick={() => setCollapsed(!collapsed)}
             className="text-fg-faint hover:text-fg transition-colors shrink-0"
           >
-            {collapsed ? <CaretRight size={10} weight="bold" /> : <CaretDown size={10} weight="bold" />}
+            {collapsed ? (
+              <CaretRight size={10} weight="bold" />
+            ) : (
+              <CaretDown size={10} weight="bold" />
+            )}
           </button>
           <button
             onClick={() => comment.by && onUserClick(comment.by)}
@@ -69,7 +73,7 @@ function Comment({ commentId, depth, onUserClick }: CommentProps) {
           <span className="text-fg-faint">{timeAgo(comment.time)}</span>
           {collapsed && hasKids && (
             <span className="text-fg-faint">
-              [{comment.kids!.length} {comment.kids!.length === 1 ? 'reply' : 'replies'}]
+              [{comment.kids!.length} {comment.kids!.length === 1 ? "reply" : "replies"}]
             </span>
           )}
         </div>
@@ -79,12 +83,17 @@ function Comment({ commentId, depth, onUserClick }: CommentProps) {
           <>
             <div
               className="comment-html text-base text-fg leading-relaxed mt-1"
-              dangerouslySetInnerHTML={{ __html: comment.text || '' }}
+              dangerouslySetInnerHTML={{ __html: comment.text || "" }}
             />
             {hasKids && (
               <div className="mt-1">
                 {comment.kids!.map((kidId) => (
-                  <Comment key={kidId} commentId={kidId} depth={depth + 1} onUserClick={onUserClick} />
+                  <Comment
+                    key={kidId}
+                    commentId={kidId}
+                    depth={depth + 1}
+                    onUserClick={onUserClick}
+                  />
                 ))}
               </div>
             )}
@@ -102,11 +111,7 @@ interface CommentTreeProps {
 
 export function CommentTree({ commentIds, onUserClick }: CommentTreeProps) {
   if (commentIds.length === 0) {
-    return (
-      <div className="text-center py-12 text-fg-faint text-xs">
-        No comments yet.
-      </div>
-    );
+    return <div className="text-center py-12 text-fg-faint text-xs">No comments yet.</div>;
   }
 
   return (

@@ -1,7 +1,7 @@
-import { createContext, useContext, useState, useCallback } from 'react';
-import type { ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback } from "react";
+import type { ReactNode } from "react";
 
-type Theme = 'dark' | 'light';
+type Theme = "dark" | "light";
 
 interface ThemeContextType {
   theme: Theme;
@@ -9,7 +9,7 @@ interface ThemeContextType {
 }
 
 const ThemeContext = createContext<ThemeContextType>({
-  theme: 'dark',
+  theme: "dark",
   toggle: () => {},
 });
 
@@ -18,9 +18,9 @@ export function useTheme() {
 }
 
 function getInitialTheme(): Theme {
-  const stored = localStorage.getItem('hn-theme');
-  if (stored === 'dark' || stored === 'light') return stored;
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  const stored = localStorage.getItem("hn-theme");
+  if (stored === "dark" || stored === "light") return stored;
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
@@ -30,9 +30,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const toggle = useCallback(() => {
     setTheme((prev) => {
-      const next = prev === 'dark' ? 'light' : 'dark';
-      document.documentElement.classList.toggle('dark', next === 'dark');
-      localStorage.setItem('hn-theme', next);
+      const next = prev === "dark" ? "light" : "dark";
+      document.documentElement.classList.toggle("dark", next === "dark");
+      localStorage.setItem("hn-theme", next);
       return next;
     });
   }, []);

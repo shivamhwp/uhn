@@ -15,26 +15,26 @@ export function timeAgo(timestamp: number): string {
 export function extractDomain(url?: string): string | null {
   if (!url) return null;
   try {
-    return new URL(url).hostname.replace(/^www\./, '');
+    return new URL(url).hostname.replace(/^www\./, "");
   } catch {
     return null;
   }
 }
 
 export function pluralize(n: number, singular: string, plural?: string): string {
-  return n === 1 ? `${n} ${singular}` : `${n} ${plural ?? singular + 's'}`;
+  return n === 1 ? `${n} ${singular}` : `${n} ${plural ?? singular + "s"}`;
 }
 
 export function isInputFocused(): boolean {
   const tag = document.activeElement?.tagName;
-  return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+  return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
 }
 
 export function formatDate(timestamp: number): string {
-  return new Date(timestamp * 1000).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
+  return new Date(timestamp * 1000).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
   });
 }
 

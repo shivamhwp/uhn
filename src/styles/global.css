@@ -4,7 +4,7 @@
 
 @theme {
   --font-sans: var(--font-switzer), system-ui, sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, 'Cascadia Code', monospace;
+  --font-mono: ui-monospace, SFMono-Regular, "Cascadia Code", monospace;
 
   --color-bg: #f8f8f6;
   --color-surface: #ffffff;
@@ -46,6 +46,7 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+  scrollbar-gutter: stable;
   --comment-indent: 20px;
 }
 
@@ -56,15 +57,27 @@ html {
 }
 
 body {
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
   overflow-x: hidden;
+  overflow-y: scroll;
 }
 
 /* Scrollbar */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--color-edge); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--color-fg-faint); }
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-edge);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-fg-faint);
+}
 
 /* Comment & story HTML content */
 .comment-html a,
@@ -110,18 +123,32 @@ body {
 
 /* Animations */
 @keyframes fadeSlideIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }
 
 .animate-entry {

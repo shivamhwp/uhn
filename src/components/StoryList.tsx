@@ -1,12 +1,14 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { useWindowVirtualizer } from '@tanstack/react-virtual';
-import { useQueryClient } from '@tanstack/react-query';
-import { useStoryIds, useStoriesPage, usePrefetchItem, ITEMS_PER_PAGE } from '../lib/hooks';
-import { useTheme } from './ThemeProvider';
-import { isInputFocused } from '../lib/utils';
-import { StoryItem, StoryItemSkeleton } from './StoryItem';
-import { CaretLeft, CaretRight, Spinner } from '@phosphor-icons/react';
-import type { FeedType } from '../lib/types';
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useWindowVirtualizer } from "@tanstack/react-virtual";
+import { useQueryClient } from "@tanstack/react-query";
+import { useStore } from "@nanostores/react";
+import { useStoryIds, useStoriesPage, usePrefetchItem, ITEMS_PER_PAGE } from "../lib/hooks";
+import { useTheme } from "./ThemeProvider";
+import { isInputFocused } from "../lib/utils";
+import { $activeStory } from "../lib/stores";
+import { StoryItem, StoryItemSkeleton } from "./StoryItem";
+import { CaretLeft, CaretRight, Spinner } from "@phosphor-icons/react";
+import type { FeedType } from "../lib/types";
 
 interface Props {
   feedType: FeedType;
@@ -16,7 +18,14 @@ interface Props {
   onToggleShortcuts: () => void;
 }
 
-export function StoryList({ feedType, onStoryClick, onUserClick, onSearch, onToggleShortcuts }: Props) {
+export function StoryList({
+  feedType,
+  onStoryClick,
+  onUserClick,
+  onSearch,
+  onToggleShortcuts,
+}: Props) {
+  const activeStory = useStore($activeStory);
   const [page, setPage] = useState(0);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
@@ -49,73 +58,91 @@ export function StoryList({ feedType, onStoryClick, onUserClick, onSearch, onTog
     scrollPaddingEnd: 280,
   });
 
+  useEffect(() => {
+    if (stories.length === 0 || activeStory?.feedType !== feedType) return;
+    const restoredIndex = stories.findIndex((story) => story.id === activeStory.storyId);
+    if (restoredIndex < 0) return;
+    setSelectedIndex(restoredIndex);
+  }, [activeStory, feedType, stories]);
+
+  useEffect(() => {
+    if (stories.length === 0) return;
+    if (selectedIndex < stories.length) return;
+    setSelectedIndex(stories.length - 1);
+  }, [selectedIndex, stories.length]);
+
   // Keyboard navigation
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (isInputFocused()) return;
 
       const feedKeys: Record<string, FeedType> = {
-        '1': 'top',
-        '2': 'new',
-        '3': 'best',
-        '4': 'ask',
-        '5': 'show',
-        '6': 'jobs',
+        "1": "top",
+        "2": "new",
+        "3": "best",
+        "4": "ask",
+        "5": "show",
+        "6": "jobs",
       };
 
       switch (e.key) {
-        case 'j':
-        case 'ArrowDown': {
+        case "j":
+        case "ArrowDown": {
           e.preventDefault();
           const next = Math.min(selectedIndex + 1, stories.length - 1);
           if (next >= stories.length - 3 && hasMore) loadMore();
           setSelectedIndex(next);
-          virtualizer.scrollToIndex(next, { align: 'auto', behavior: 'smooth' });
+          const nextStory = stories[next];
+          if (nextStory) $activeStory.set({ feedType, storyId: nextStory.id });
+          virtualizer.scrollToIndex(next, { align: "auto", behavior: "smooth" });
           break;
         }
-        case 'k':
-        case 'ArrowUp': {
+        case "k":
+        case "ArrowUp": {
           e.preventDefault();
           const prev = Math.max(selectedIndex - 1, 0);
           setSelectedIndex(prev);
-          virtualizer.scrollToIndex(prev, { align: 'auto', behavior: 'smooth' });
+          const prevStory = stories[prev];
+          if (prevStory) $activeStory.set({ feedType, storyId: prevStory.id });
+          virtualizer.scrollToIndex(prev, { align: "auto", behavior: "smooth" });
           break;
         }
-        case 'Enter':
+        case "Enter":
           e.preventDefault();
           if (stories[selectedIndex]) {
+            $activeStory.set({ feedType, storyId: stories[selectedIndex].id });
             onStoryClick(stories[selectedIndex].id);
           }
           break;
-        case 'o': {
+        case "o": {
           e.preventDefault();
           const story = stories[selectedIndex];
           if (story?.url) {
-            window.open(story.url, '_blank', 'noopener,noreferrer');
+            window.open(story.url, "_blank", "noopener,noreferrer");
           }
           break;
         }
-        case '/':
+        case "/":
           e.preventDefault();
           onSearch();
           break;
-        case 't':
+        case "t":
           e.preventDefault();
           toggleTheme();
           break;
-        case '?':
+        case "?":
           e.preventDefault();
           onToggleShortcuts();
           break;
-        case 'r':
+        case "r":
           e.preventDefault();
-          queryClient.invalidateQueries({ queryKey: ['storyIds'] });
+          queryClient.invalidateQueries({ queryKey: ["storyIds"] });
           break;
-        case ']':
+        case "]":
           e.preventDefault();
           loadMore();
           break;
-        case '[':
+        case "[":
           e.preventDefault();
           if (page > 0) {
             setPage((p) => p - 1);
@@ -130,9 +157,21 @@ export function StoryList({ feedType, onStoryClick, onUserClick, onSearch, onTog
       }
     };
 
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [stories, selectedIndex, hasMore, page, loadMore, virtualizer, onStoryClick, onSearch, onToggleShortcuts, toggleTheme, queryClient]);
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [
+    stories,
+    selectedIndex,
+    hasMore,
+    page,
+    loadMore,
+    virtualizer,
+    onStoryClick,
+    onSearch,
+    onToggleShortcuts,
+    toggleTheme,
+    queryClient,
+  ]);
 
   if (idsLoading || isLoading) {
     return (
@@ -154,33 +193,37 @@ export function StoryList({ feedType, onStoryClick, onUserClick, onSearch, onTog
       <div
         style={{
           height: virtualizer.getTotalSize(),
-          width: '100%',
-          position: 'relative',
+          width: "100%",
+          position: "relative",
         }}
       >
         <div
           style={{
-            position: 'absolute',
+            position: "absolute",
             top: 0,
             left: 0,
-            width: '100%',
+            width: "100%",
             transform: `translateY(${(virtualItems[0]?.start ?? 0) - virtualizer.options.scrollMargin}px)`,
           }}
         >
           {virtualItems.map((virtualRow) => {
             const story = stories[virtualRow.index];
+            if (!story) return null;
             const i = virtualRow.index;
             return (
-              <div
-                key={story.id}
-                data-index={virtualRow.index}
-                ref={virtualizer.measureElement}
-              >
+              <div key={story.id} data-index={virtualRow.index} ref={virtualizer.measureElement}>
                 <StoryItem
                   story={story}
                   rank={i + 1}
                   isSelected={i === selectedIndex}
-                  onClick={() => onStoryClick(story.id)}
+                  onClick={() => {
+                    $activeStory.set({ feedType, storyId: story.id });
+                    onStoryClick(story.id);
+                  }}
+                  onHover={() => {
+                    setSelectedIndex(i);
+                    $activeStory.set({ feedType, storyId: story.id });
+                  }}
                   onUserClick={onUserClick}
                   onPrefetch={() => prefetchItem(story.id)}
                 />
@@ -201,7 +244,7 @@ export function StoryList({ feedType, onStoryClick, onUserClick, onSearch, onTog
               onClick={() => {
                 setPage((p) => p - 1);
                 setSelectedIndex(0);
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                window.scrollTo({ top: 0, behavior: "smooth" });
               }}
               className="flex items-center gap-1 px-3 py-1.5 text-xs text-fg-muted hover:text-fg bg-surface hover:bg-surface-hover border border-edge rounded-md transition-colors"
             >
@@ -233,7 +276,6 @@ export function StoryList({ feedType, onStoryClick, onUserClick, onSearch, onTog
           )}
         </div>
       </div>
-
     </div>
   );
 }

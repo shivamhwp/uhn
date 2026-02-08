@@ -1,6 +1,6 @@
 export interface HNItem {
   id: number;
-  type: 'story' | 'comment' | 'job' | 'poll' | 'pollopt';
+  type: "story" | "comment" | "job" | "poll" | "pollopt";
   by?: string;
   time: number;
   text?: string;
@@ -24,7 +24,7 @@ export interface HNUser {
   submitted?: number[];
 }
 
-export type FeedType = 'top' | 'new' | 'best' | 'ask' | 'show' | 'jobs';
+export type FeedType = "top" | "new" | "best" | "ask" | "show" | "jobs";
 
 export interface SearchFilters {
   query: string;
@@ -54,7 +54,7 @@ export interface AlgoliaResponse {
 }
 
 export type Route =
-  | { view: 'feed'; feedType: FeedType }
-  | { view: 'story'; id: number }
-  | { view: 'user'; id: string }
-  | { view: 'search' };
+  | { view: "feed"; feedType: FeedType }
+  | { view: "story"; id: number }
+  | { view: "user"; id: string }
+  | { view: "search" };

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect } from "react";
 import {
   ArrowLeft,
   ArrowSquareOut,
@@ -6,11 +6,11 @@ import {
   User,
   ChatCircle,
   Clock,
-} from '@phosphor-icons/react';
-import { useItem } from '../lib/hooks';
-import { useTheme } from './ThemeProvider';
-import { timeAgo, extractDomain, formatDate, isInputFocused } from '../lib/utils';
-import { CommentTree } from './CommentTree';
+} from "@phosphor-icons/react";
+import { useItem } from "../lib/hooks";
+import { useTheme } from "./ThemeProvider";
+import { timeAgo, extractDomain, formatDate, isInputFocused } from "../lib/utils";
+import { CommentTree } from "./CommentTree";
 
 interface Props {
   storyId: number;
@@ -29,24 +29,24 @@ export function StoryDetail({ storyId, onBack, onUserClick, onStoryClick }: Prop
     const handler = (e: KeyboardEvent) => {
       if (isInputFocused()) return;
       switch (e.key) {
-        case 'h':
-        case 'Escape':
-        case 'Backspace':
+        case "h":
+        case "Escape":
+        case "Backspace":
           e.preventDefault();
           onBack();
           break;
-        case 'o':
+        case "o":
           e.preventDefault();
-          if (story?.url) window.open(story.url, '_blank', 'noopener,noreferrer');
+          if (story?.url) window.open(story.url, "_blank", "noopener,noreferrer");
           break;
-        case 't':
+        case "t":
           e.preventDefault();
           toggleTheme();
           break;
       }
     };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
   }, [onBack, story, toggleTheme]);
 
   if (isLoading) {
@@ -154,7 +154,6 @@ export function StoryDetail({ storyId, onBack, onUserClick, onStoryClick }: Prop
         </h2>
         <CommentTree commentIds={story.kids ?? []} onUserClick={onUserClick} />
       </div>
-
     </div>
   );
 }

@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
-import { ArrowLeft, Calendar, Lightning, Article, Spinner } from '@phosphor-icons/react';
-import { useUser } from '../lib/hooks';
-import { formatDate, timeAgo, extractDomain, isInputFocused } from '../lib/utils';
-import type { HNItem } from '../lib/types';
-import { useQueries } from '@tanstack/react-query';
-import { fetchItem } from '../lib/api';
+import { useEffect, useState } from "react";
+import { ArrowLeft, Calendar, Lightning, Article, Spinner } from "@phosphor-icons/react";
+import { useUser } from "../lib/hooks";
+import { formatDate, timeAgo, extractDomain, isInputFocused } from "../lib/utils";
+import type { HNItem } from "../lib/types";
+import { useQueries } from "@tanstack/react-query";
+import { fetchItem } from "../lib/api";
 
 interface Props {
   userId: string;
@@ -21,7 +21,7 @@ export function UserProfile({ userId, onBack, onStoryClick }: Props) {
   const submissionIds = user?.submitted?.slice(0, showCount) ?? [];
   const submissions = useQueries({
     queries: submissionIds.map((id) => ({
-      queryKey: ['item', id] as const,
+      queryKey: ["item", id] as const,
       queryFn: () => fetchItem(id),
       staleTime: Infinity,
       gcTime: 24 * 60 * 60 * 1000,
@@ -30,19 +30,22 @@ export function UserProfile({ userId, onBack, onStoryClick }: Props) {
 
   const stories = submissions
     .map((q) => q.data)
-    .filter((item): item is HNItem => item != null && item.type === 'story' && !item.dead && !item.deleted);
+    .filter(
+      (item): item is HNItem =>
+        item != null && item.type === "story" && !item.dead && !item.deleted,
+    );
 
   // Keyboard
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (isInputFocused()) return;
-      if (e.key === 'h' || e.key === 'Escape' || e.key === 'Backspace') {
+      if (e.key === "h" || e.key === "Escape" || e.key === "Backspace") {
         e.preventDefault();
         onBack();
       }
     };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
   }, [onBack]);
 
   if (isLoading) {
