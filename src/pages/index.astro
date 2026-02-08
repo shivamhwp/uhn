@@ -2,6 +2,8 @@
 import '../styles/global.css';
 import { Font } from 'astro:assets';
 import App from '../components/App';
+
+const isProd = import.meta.env.PROD;
 ---
 
 <html lang="en">
@@ -28,7 +30,7 @@ import App from '../components/App';
     <!-- OneDollarStats -->
     <script is:inline src="https://assets.onedollarstats.com/stonks.js" data-hash-routing></script>
 
-    <script is:inline>
+    <script is:inline define:vars={{ isProd }}>
       // Prevent theme flash
       (function() {
         var t = localStorage.getItem('hn-theme');
@@ -36,10 +38,28 @@ import App from '../components/App';
         if (t === 'dark') document.documentElement.classList.add('dark');
       })();
 
-      // Register service worker
+      // Register SW only in production. In development, remove any existing SW/caches
+      // so Vite HMR modules are never served from stale cache.
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
-          navigator.serviceWorker.register('/sw.js');
+          if (isProd) {
+            navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' });
+            return;
+          }
+
+          navigator.serviceWorker.getRegistrations().then(function(registrations) {
+            registrations.forEach(function(registration) {
+              registration.unregister();
+            });
+          });
+
+          if ('caches' in window) {
+            caches.keys().then(function(keys) {
+              keys.forEach(function(key) {
+                caches.delete(key);
+              });
+            });
+          }
         });
       }
     </script>

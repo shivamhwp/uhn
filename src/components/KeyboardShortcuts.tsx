@@ -53,7 +53,7 @@ export function KeyboardShortcuts({ isOpen, onClose }: Props) {
                 {s.keys.map((key) => (
                   <kbd
                     key={key}
-                    className="inline-flex items-center justify-center min-w-[20px] h-5 px-1 text-[10px] font-medium text-fg-faint bg-kbd border border-kbd-edge rounded"
+                    className="inline-flex items-center justify-center min-w-5 h-5 px-1 text-[10px] font-medium text-fg-faint bg-kbd border border-kbd-edge rounded"
                   >
                     {key}
                   </kbd>

@@ -25,10 +25,5 @@ export default defineConfig({
     resolve: {
       dedupe: ["react", "react-dom"],
     },
-    server: {
-      hmr: {
-        clientPort: 4321,
-      },
-    },
   },
 });
