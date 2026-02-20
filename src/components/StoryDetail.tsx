@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import {
   ArrowLeft,
   ArrowSquareOut,
@@ -9,7 +8,8 @@ import {
 } from "@phosphor-icons/react";
 import { useItem } from "../lib/hooks";
 import { useTheme } from "./ThemeProvider";
-import { timeAgo, extractDomain, formatDate, isInputFocused } from "../lib/utils";
+import { timeAgo, extractDomain, formatDate } from "../lib/utils";
+import { useHotkeys } from "../lib/useHotkeys";
 import { CommentTree } from "./CommentTree";
 
 interface Props {
@@ -24,30 +24,13 @@ export function StoryDetail({ storyId, onBack, onUserClick, onStoryClick }: Prop
   const { toggle: toggleTheme } = useTheme();
   const domain = extractDomain(story?.url);
 
-  // Keyboard
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (isInputFocused()) return;
-      switch (e.key) {
-        case "h":
-        case "Escape":
-        case "Backspace":
-          e.preventDefault();
-          onBack();
-          break;
-        case "o":
-          e.preventDefault();
-          if (story?.url) window.open(story.url, "_blank", "noopener,noreferrer");
-          break;
-        case "t":
-          e.preventDefault();
-          toggleTheme();
-          break;
-      }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [onBack, story, toggleTheme]);
+  useHotkeys({
+    h: () => onBack(),
+    Escape: () => onBack(),
+    Backspace: () => onBack(),
+    o: () => story?.url && window.open(story.url, "_blank", "noopener,noreferrer"),
+    t: () => toggleTheme(),
+  });
 
   if (isLoading) {
     return (

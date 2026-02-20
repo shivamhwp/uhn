@@ -1,8 +1,8 @@
-import { useEffect } from "react";
 import { useStore } from "@nanostores/react";
 import { ArrowLeft, Calendar, Lightning, Article, Spinner } from "@phosphor-icons/react";
 import { useUser } from "../lib/hooks";
-import { formatDate, timeAgo, extractDomain, isInputFocused } from "../lib/utils";
+import { formatDate, timeAgo, extractDomain } from "../lib/utils";
+import { useHotkeys } from "../lib/useHotkeys";
 import type { HNItem } from "../lib/types";
 import { useQueries } from "@tanstack/react-query";
 import { fetchItem } from "../lib/api";
@@ -42,18 +42,11 @@ export function UserProfile({ userId, onBack, onStoryClick }: Props) {
         item != null && item.type === "story" && !item.dead && !item.deleted,
     );
 
-  // Keyboard
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (isInputFocused()) return;
-      if (e.key === "h" || e.key === "Escape" || e.key === "Backspace") {
-        e.preventDefault();
-        onBack();
-      }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [onBack]);
+  useHotkeys({
+    h: () => onBack(),
+    Escape: () => onBack(),
+    Backspace: () => onBack(),
+  });
 
   if (isLoading) {
     return (

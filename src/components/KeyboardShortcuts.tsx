@@ -1,6 +1,5 @@
 import { X } from "@phosphor-icons/react";
-import { useEffect } from "react";
-import { isInputFocused } from "../lib/utils";
+import { useHotkeys } from "../lib/useHotkeys";
 
 interface Props {
   isOpen: boolean;
@@ -22,17 +21,7 @@ const shortcuts = [
 ];
 
 export function KeyboardShortcuts({ isOpen, onClose }: Props) {
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (isInputFocused()) return;
-      if (e.key === "?" && isOpen) {
-        e.preventDefault();
-        onClose();
-      }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [isOpen, onClose]);
+  useHotkeys(isOpen ? { "?": () => onClose() } : {});
 
   if (!isOpen) return null;
 

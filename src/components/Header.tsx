@@ -18,6 +18,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { FeedType, Route } from "../lib/types";
 import { useTheme } from "./ThemeProvider";
+import { useHotkeys } from "../lib/useHotkeys";
 
 const feeds = [
   { type: "top", label: "Top", icon: FireIcon },
@@ -72,6 +73,8 @@ export function Header({
     requestAnimationFrame(() => searchInputRef.current?.focus());
   }, [searchOpen]);
 
+  useHotkeys(isFeedMenuOpen ? { Escape: () => setIsFeedMenuOpen(false) } : {});
+
   useEffect(() => {
     if (!isFeedMenuOpen) return;
 
@@ -80,17 +83,8 @@ export function Header({
       setIsFeedMenuOpen(false);
     };
 
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setIsFeedMenuOpen(false);
-    };
-
     document.addEventListener("pointerdown", handlePointerDown);
-    window.addEventListener("keydown", handleEscape);
-
-    return () => {
-      document.removeEventListener("pointerdown", handlePointerDown);
-      window.removeEventListener("keydown", handleEscape);
-    };
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
   }, [isFeedMenuOpen]);
 
   const refreshFeeds = () => {

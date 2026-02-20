@@ -2,8 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { useStore } from "@nanostores/react";
 import { ArrowSquareOut, CaretLeft, CaretRight, Spinner } from "@phosphor-icons/react";
 import { useSearch } from "../lib/hooks";
-import { extractDomain, isInputFocused, timeAgo } from "../lib/utils";
+import { extractDomain, timeAgo } from "../lib/utils";
 import { $searchPage, setSearchPageEntry } from "../lib/stores";
+import { useHotkeys } from "../lib/useHotkeys";
 
 interface Props {
   query: string;
@@ -32,43 +33,25 @@ export function SearchResultsList({ query, onStoryClick, onUserClick }: Props) {
     setSelectedIndex(0);
   }, [query]);
 
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (isInputFocused()) return;
-      switch (e.key) {
-        case "j":
-        case "ArrowDown":
-          e.preventDefault();
-          setSelectedIndex((i) => Math.min(i + 1, hits.length - 1));
-          break;
-        case "k":
-        case "ArrowUp":
-          e.preventDefault();
-          setSelectedIndex((i) => Math.max(i - 1, 0));
-          break;
-        case "Enter":
-          e.preventDefault();
-          if (hits[selectedIndex]) onStoryClick(Number(hits[selectedIndex].objectID));
-          break;
-        case "[":
-          e.preventDefault();
-          if (page > 0) {
-            setPage((p) => p - 1);
-            setSelectedIndex(0);
-          }
-          break;
-        case "]":
-          e.preventDefault();
-          if (data && page < data.nbPages - 1) {
-            setPage((p) => p + 1);
-            setSelectedIndex(0);
-          }
-          break;
+  useHotkeys({
+    j: () => setSelectedIndex((i) => Math.min(i + 1, hits.length - 1)),
+    ArrowDown: () => setSelectedIndex((i) => Math.min(i + 1, hits.length - 1)),
+    k: () => setSelectedIndex((i) => Math.max(i - 1, 0)),
+    ArrowUp: () => setSelectedIndex((i) => Math.max(i - 1, 0)),
+    Enter: () => hits[selectedIndex] && onStoryClick(Number(hits[selectedIndex].objectID)),
+    "[": () => {
+      if (page > 0) {
+        setPage((p) => p - 1);
+        setSelectedIndex(0);
       }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [data, hits, onStoryClick, page, query, selectedIndex]);
+    },
+    "]": () => {
+      if (data && page < data.nbPages - 1) {
+        setPage((p) => p + 1);
+        setSelectedIndex(0);
+      }
+    },
+  });
 
   if (!query.trim()) {
     return (

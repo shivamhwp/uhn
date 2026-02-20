@@ -1,11 +1,11 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { useQueryClient } from "@tanstack/react-query";
 import { useStore } from "@nanostores/react";
 import { useStoryIds, useStoriesPage, usePrefetchItem, ITEMS_PER_PAGE } from "../lib/hooks";
 import { useTheme } from "./ThemeProvider";
-import { isInputFocused } from "../lib/utils";
 import { $activeStory, $feedPage } from "../lib/stores";
+import { useHotkeys } from "../lib/useHotkeys";
 import { StoryItem, StoryItemSkeleton } from "./StoryItem";
 import { CaretLeft, CaretRight, Spinner } from "@phosphor-icons/react";
 import type { FeedType } from "../lib/types";
@@ -74,107 +74,66 @@ export function StoryList({
     scrollPaddingEnd: 280,
   });
 
-  // Keyboard navigation
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (isInputFocused()) return;
-
-      const feedKeys: Record<string, FeedType> = {
-        "1": "top",
-        "2": "new",
-        "3": "best",
-        "4": "ask",
-        "5": "show",
-        "6": "jobs",
-      };
-
-      switch (e.key) {
-        case "j":
-        case "ArrowDown": {
-          e.preventDefault();
-          const next = Math.min(selectedIndex + 1, stories.length - 1);
-          if (next >= stories.length - 3 && hasMore) loadMore();
-          setSelectedIndex(next);
-          const nextStory = stories[next];
-          if (nextStory) $activeStory.set({ feedType, storyId: nextStory.id });
-          virtualizer.scrollToIndex(next, { align: "auto", behavior: "smooth" });
-          break;
-        }
-        case "k":
-        case "ArrowUp": {
-          e.preventDefault();
-          const prev = Math.max(selectedIndex - 1, 0);
-          setSelectedIndex(prev);
-          const prevStory = stories[prev];
-          if (prevStory) $activeStory.set({ feedType, storyId: prevStory.id });
-          virtualizer.scrollToIndex(prev, { align: "auto", behavior: "smooth" });
-          break;
-        }
-        case "Enter":
-          e.preventDefault();
-          if (stories[selectedIndex]) {
-            $activeStory.set({ feedType, storyId: stories[selectedIndex].id });
-            onStoryClick(stories[selectedIndex].id);
-          }
-          break;
-        case "o": {
-          e.preventDefault();
-          const story = stories[selectedIndex];
-          if (story?.url) {
-            window.open(story.url, "_blank", "noopener,noreferrer");
-          }
-          break;
-        }
-        case "/":
-          e.preventDefault();
-          onSearch();
-          break;
-        case "t":
-          e.preventDefault();
-          toggleTheme();
-          break;
-        case "?":
-          e.preventDefault();
-          onToggleShortcuts();
-          break;
-        case "r":
-          e.preventDefault();
-          queryClient.invalidateQueries({ queryKey: ["storyIds"] });
-          break;
-        case "]":
-          e.preventDefault();
-          loadMore();
-          break;
-        case "[":
-          e.preventDefault();
-          if (page > 0) {
-            setPage((p) => p - 1);
-            setSelectedIndex(0);
-          }
-          break;
-        default:
-          if (feedKeys[e.key]) {
-            e.preventDefault();
-            window.location.hash = feedKeys[e.key];
-          }
+  useHotkeys({
+    j: () => {
+      const next = Math.min(selectedIndex + 1, stories.length - 1);
+      if (next >= stories.length - 3 && hasMore) loadMore();
+      setSelectedIndex(next);
+      const nextStory = stories[next];
+      if (nextStory) $activeStory.set({ feedType, storyId: nextStory.id });
+      virtualizer.scrollToIndex(next, { align: "auto", behavior: "smooth" });
+    },
+    ArrowDown: () => {
+      const next = Math.min(selectedIndex + 1, stories.length - 1);
+      if (next >= stories.length - 3 && hasMore) loadMore();
+      setSelectedIndex(next);
+      const nextStory = stories[next];
+      if (nextStory) $activeStory.set({ feedType, storyId: nextStory.id });
+      virtualizer.scrollToIndex(next, { align: "auto", behavior: "smooth" });
+    },
+    k: () => {
+      const prev = Math.max(selectedIndex - 1, 0);
+      setSelectedIndex(prev);
+      const prevStory = stories[prev];
+      if (prevStory) $activeStory.set({ feedType, storyId: prevStory.id });
+      virtualizer.scrollToIndex(prev, { align: "auto", behavior: "smooth" });
+    },
+    ArrowUp: () => {
+      const prev = Math.max(selectedIndex - 1, 0);
+      setSelectedIndex(prev);
+      const prevStory = stories[prev];
+      if (prevStory) $activeStory.set({ feedType, storyId: prevStory.id });
+      virtualizer.scrollToIndex(prev, { align: "auto", behavior: "smooth" });
+    },
+    Enter: () => {
+      if (stories[selectedIndex]) {
+        $activeStory.set({ feedType, storyId: stories[selectedIndex].id });
+        onStoryClick(stories[selectedIndex].id);
       }
-    };
-
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [
-    stories,
-    selectedIndex,
-    hasMore,
-    page,
-    loadMore,
-    virtualizer,
-    onStoryClick,
-    onSearch,
-    onToggleShortcuts,
-    toggleTheme,
-    queryClient,
-  ]);
+    },
+    o: () => {
+      const story = stories[selectedIndex];
+      if (story?.url) window.open(story.url, "_blank", "noopener,noreferrer");
+    },
+    "/": () => onSearch(),
+    t: () => toggleTheme(),
+    "?": () => onToggleShortcuts(),
+    r: () => queryClient.invalidateQueries({ queryKey: ["storyIds"] }),
+    "]": () => loadMore(),
+    "[": () => {
+      if (page > 0) {
+        setPage((p) => p - 1);
+        setSelectedIndex(0);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    },
+    "1": () => (window.location.hash = "top"),
+    "2": () => (window.location.hash = "new"),
+    "3": () => (window.location.hash = "best"),
+    "4": () => (window.location.hash = "ask"),
+    "5": () => (window.location.hash = "show"),
+    "6": () => (window.location.hash = "jobs"),
+  });
 
   if (idsLoading || isLoading) {
     return (

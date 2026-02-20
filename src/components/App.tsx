@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import type { FeedType, Route } from "../lib/types";
-import { isInputFocused } from "../lib/utils";
+import { useHotkeys } from "../lib/useHotkeys";
 import { Header } from "./Header";
 import { KeyboardShortcuts } from "./KeyboardShortcuts";
 import { SearchResultsList } from "./SearchResultsList";
@@ -69,25 +69,20 @@ function AppShell() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "/" && !isInputFocused()) {
-        e.preventDefault();
-        setSearchOpen(true);
-      }
-      if (e.key === "Escape" && searchOpen) {
-        e.preventDefault();
-        const shouldGoHome = !searchQuery.trim();
-        setSearchOpen(false);
-        setSearchQuery("");
-        if (shouldGoHome) {
-          window.location.hash = "top";
+  useHotkeys(
+    searchOpen
+      ? {
+          Escape: () => {
+            const shouldGoHome = !searchQuery.trim();
+            setSearchOpen(false);
+            setSearchQuery("");
+            if (shouldGoHome) window.location.hash = "top";
+          },
         }
-      }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [searchOpen, searchQuery]);
+      : {
+          "/": () => setSearchOpen(true),
+        },
+  );
 
   // Scroll restoration after route change — legitimate DOM sync
   useEffect(() => {
