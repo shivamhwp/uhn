@@ -52,9 +52,3 @@ export interface AlgoliaResponse {
   nbPages: number;
   hitsPerPage: number;
 }
-
-export type Route =
-  | { view: "feed"; feedType: FeedType }
-  | { view: "story"; id: number }
-  | { view: "user"; id: string }
-  | { view: "search" };

@@ -1,10 +1,18 @@
-import { useEffect, useState } from "react";
-import { ArrowLeft, Calendar, Lightning, Article, Spinner } from "@phosphor-icons/react";
+import { useStore } from "@nanostores/react";
+import {
+  ArrowLeftIcon,
+  CalendarIcon,
+  LightningIcon,
+  ArticleIcon,
+  SpinnerIcon,
+} from "@phosphor-icons/react";
 import { useUser } from "../lib/hooks";
-import { formatDate, timeAgo, extractDomain, isInputFocused } from "../lib/utils";
+import { formatDate, timeAgo, extractDomain } from "../lib/utils";
+import { useHotkeys } from "../lib/useHotkeys";
 import type { HNItem } from "../lib/types";
 import { useQueries } from "@tanstack/react-query";
 import { fetchItem } from "../lib/api";
+import { $userProfileShowCount, setUserProfileShowCountEntry } from "../lib/stores";
 
 interface Props {
   userId: string;
@@ -16,7 +24,12 @@ const SUBMISSIONS_PER_PAGE = 15;
 
 export function UserProfile({ userId, onBack, onStoryClick }: Props) {
   const { data: user, isLoading } = useUser(userId);
-  const [showCount, setShowCount] = useState(SUBMISSIONS_PER_PAGE);
+  const showCounts = useStore($userProfileShowCount);
+  const showCount = showCounts[userId] ?? SUBMISSIONS_PER_PAGE;
+  const setShowCount = (action: number | ((c: number) => number)) => {
+    const next = typeof action === "function" ? action(showCount) : action;
+    setUserProfileShowCountEntry(userId, next);
+  };
 
   const submissionIds = user?.submitted?.slice(0, showCount) ?? [];
   const submissions = useQueries({
@@ -35,28 +48,16 @@ export function UserProfile({ userId, onBack, onStoryClick }: Props) {
         item != null && item.type === "story" && !item.dead && !item.deleted,
     );
 
-  // Keyboard
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (isInputFocused()) return;
-      if (e.key === "h" || e.key === "Escape" || e.key === "Backspace") {
-        e.preventDefault();
-        onBack();
-      }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [onBack]);
+  useHotkeys({
+    h: () => onBack(),
+    Escape: () => onBack(),
+    Backspace: () => onBack(),
+  });
 
   if (isLoading) {
     return (
-      <div className="py-6 space-y-4 animate-fade">
-        <div className="skeleton h-4 w-16" />
-        <div className="skeleton h-8 w-48" />
-        <div className="flex gap-4">
-          <div className="skeleton h-4 w-24" />
-          <div className="skeleton h-4 w-24" />
-        </div>
+      <div className="flex items-center justify-center py-16 animate-fade">
+        <SpinnerIcon size={24} className="animate-spin text-fg-muted" />
       </div>
     );
   }
@@ -79,7 +80,7 @@ export function UserProfile({ userId, onBack, onStoryClick }: Props) {
         onClick={onBack}
         className="flex items-center gap-1.5 text-xs text-fg-muted hover:text-accent transition-colors mb-4 group"
       >
-        <ArrowLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" />
+        <ArrowLeftIcon size={14} className="group-hover:-translate-x-0.5 transition-transform" />
         Back
       </button>
 
@@ -88,16 +89,16 @@ export function UserProfile({ userId, onBack, onStoryClick }: Props) {
         <h1 className="text-lg font-semibold text-fg">{user.id}</h1>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-sm text-fg-muted">
           <span className="flex items-center gap-1.5">
-            <Lightning size={13} weight="bold" className="text-accent" />
+            <LightningIcon size={13} weight="bold" className="text-accent" />
             {user.karma.toLocaleString()} karma
           </span>
           <span className="flex items-center gap-1.5">
-            <Calendar size={13} />
+            <CalendarIcon size={13} />
             Joined {formatDate(user.created)}
           </span>
           {user.submitted && (
             <span className="flex items-center gap-1.5">
-              <Article size={13} />
+              <ArticleIcon size={13} />
               {user.submitted.length.toLocaleString()} submissions
             </span>
           )}

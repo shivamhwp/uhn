@@ -3,13 +3,14 @@ import { fetchItem, fetchUser, fetchStoryIds, searchStories } from "./api";
 import type { FeedType, HNItem, SearchFilters } from "./types";
 
 export const ITEMS_PER_PAGE = 30;
+const STALE_FOREVER = Infinity;
 
 export function useStoryIds(feedType: FeedType) {
   return useQuery({
     queryKey: ["storyIds", feedType],
     queryFn: () => fetchStoryIds(feedType),
-    staleTime: 30 * 60 * 1000,
-    gcTime: 24 * 60 * 60 * 1000,
+    staleTime: STALE_FOREVER,
+    gcTime: Infinity,
   });
 }
 
@@ -22,8 +23,8 @@ export function useStoriesPage(ids: number[] | undefined, page: number) {
     queries: pageIds.map((id) => ({
       queryKey: ["item", id] as const,
       queryFn: () => fetchItem(id),
-      staleTime: Infinity,
-      gcTime: 24 * 60 * 60 * 1000,
+      staleTime: STALE_FOREVER,
+      gcTime: Infinity,
     })),
   });
 
@@ -42,8 +43,8 @@ export function useItem(id: number | null) {
     queryKey: ["item", id],
     queryFn: () => fetchItem(id!),
     enabled: id != null,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 24 * 60 * 60 * 1000,
+    staleTime: STALE_FOREVER,
+    gcTime: Infinity,
   });
 }
 
@@ -52,8 +53,8 @@ export function useComments(ids: number[] | undefined) {
     queries: (ids ?? []).map((id) => ({
       queryKey: ["item", id] as const,
       queryFn: () => fetchItem(id),
-      staleTime: 5 * 60 * 1000,
-      gcTime: 24 * 60 * 60 * 1000,
+      staleTime: STALE_FOREVER,
+      gcTime: Infinity,
     })),
   });
 
@@ -68,8 +69,8 @@ export function useUser(id: string | null) {
     queryKey: ["user", id],
     queryFn: () => fetchUser(id!),
     enabled: id != null,
-    staleTime: 10 * 60 * 1000,
-    gcTime: 24 * 60 * 60 * 1000,
+    staleTime: STALE_FOREVER,
+    gcTime: Infinity,
   });
 }
 
@@ -89,8 +90,8 @@ export function useSearch(filters: SearchFilters) {
           : undefined,
       }),
     enabled: hasQuery,
-    staleTime: 2 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
+    staleTime: STALE_FOREVER,
+    gcTime: Infinity,
     placeholderData: (prev) => prev,
   });
 }

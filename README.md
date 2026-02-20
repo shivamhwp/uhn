@@ -11,7 +11,7 @@ A keyboard-driven Hacker News client built for readability and speed.
 - **User profiles** with karma, bio, and recent submissions
 - **Dark/light theme** with system preference detection and `t` to toggle
 - **Prefetching on hover** for near-instant navigation
-- **Hash-based routing** with scroll position preservation
+- **File-based Astro routes** with per-feed scroll position preservation
 
 ## Tech Stack
 

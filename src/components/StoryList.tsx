@@ -1,13 +1,15 @@
-import { useState, useEffect, useCallback, useRef } from "react";
-import { useWindowVirtualizer } from "@tanstack/react-virtual";
+import { useState, useCallback, useRef } from "react";
+import { useEffect, useLayoutEffect } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { useQueryClient } from "@tanstack/react-query";
 import { useStore } from "@nanostores/react";
 import { useStoryIds, useStoriesPage, usePrefetchItem, ITEMS_PER_PAGE } from "../lib/hooks";
+import { feedPath } from "../lib/feeds";
 import { useTheme } from "./ThemeProvider";
-import { isInputFocused } from "../lib/utils";
-import { $activeStory } from "../lib/stores";
-import { StoryItem, StoryItemSkeleton } from "./StoryItem";
-import { CaretLeft, CaretRight, Spinner } from "@phosphor-icons/react";
+import { $activeStory, $feedPage } from "../lib/stores";
+import { useHotkeys } from "../lib/useHotkeys";
+import { StoryItem } from "./StoryItem";
+import { CaretLeftIcon, CaretRightIcon, SpinnerIcon } from "@phosphor-icons/react";
 import type { FeedType } from "../lib/types";
 
 interface Props {
@@ -18,6 +20,29 @@ interface Props {
   onToggleShortcuts: () => void;
 }
 
+const feedScrollTop = new Map<FeedType, number>();
+const getFeedScrollStorageKey = (feedType: FeedType) => `uhn:feed-scroll:${feedType}`;
+
+const readSavedFeedScroll = (feedType: FeedType) => {
+  try {
+    const raw = sessionStorage.getItem(getFeedScrollStorageKey(feedType));
+    if (!raw) return null;
+    const parsed = Number.parseFloat(raw);
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
+  } catch {
+    return null;
+  }
+};
+
+const saveFeedScroll = (feedType: FeedType, top: number) => {
+  feedScrollTop.set(feedType, top);
+  try {
+    sessionStorage.setItem(getFeedScrollStorageKey(feedType), String(top));
+  } catch {
+    // Ignore storage write errors (private mode, quota, etc.).
+  }
+};
+
 export function StoryList({
   feedType,
   onStoryClick,
@@ -26,9 +51,20 @@ export function StoryList({
   onToggleShortcuts,
 }: Props) {
   const activeStory = useStore($activeStory);
-  const [page, setPage] = useState(0);
-  const [selectedIndex, setSelectedIndex] = useState(0);
-  const listRef = useRef<HTMLDivElement>(null);
+  const feedPages = useStore($feedPage);
+  const page = feedPages[feedType] ?? 0;
+  const setPage = useCallback(
+    (action: number | ((p: number) => number)) => {
+      const currentPage = $feedPage.get()[feedType] ?? 0;
+      const next = typeof action === "function" ? action(currentPage) : action;
+      $feedPage.set({ ...$feedPage.get(), [feedType]: next });
+    },
+    [feedType],
+  );
+  const [selectedIndexState, setSelectedIndexState] = useState(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const hasRestoredScrollRef = useRef(false);
+  const hasRestoredStoryAnchorRef = useRef(false);
   const { toggle: toggleTheme } = useTheme();
   const queryClient = useQueryClient();
   const prefetchItem = usePrefetchItem();
@@ -40,147 +76,182 @@ export function StoryList({
 
   const loadMore = useCallback(() => {
     if (hasMore) setPage((p) => p + 1);
-  }, [hasMore]);
+  }, [hasMore, setPage]);
 
-  // Measure list offset from top of document for window virtualizer
-  const parentOffsetRef = useRef(0);
-  useEffect(() => {
-    parentOffsetRef.current = listRef.current?.offsetTop ?? 0;
-  }, []);
+  const restoredIndex =
+    activeStory?.feedType === feedType
+      ? stories.findIndex((s) => s.id === activeStory.storyId)
+      : -1;
+  const selectedIndex =
+    restoredIndex >= 0
+      ? restoredIndex
+      : stories.length === 0
+        ? 0
+        : Math.min(selectedIndexState, stories.length - 1);
 
-  const virtualizer = useWindowVirtualizer({
+  const setSelectedIndex = setSelectedIndexState;
+
+  const virtualizer = useVirtualizer({
     count: stories.length,
-    estimateSize: () => 60,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => 84,
     overscan: 5,
-    scrollMargin: parentOffsetRef.current,
-    // Breathing room so selected item isn't pinned to viewport edges
-    scrollPaddingStart: 100,
-    scrollPaddingEnd: 280,
+    scrollPaddingStart: 80,
+    scrollPaddingEnd: 220,
   });
 
-  useEffect(() => {
-    if (stories.length === 0 || activeStory?.feedType !== feedType) return;
-    const restoredIndex = stories.findIndex((story) => story.id === activeStory.storyId);
-    if (restoredIndex < 0) return;
-    setSelectedIndex(restoredIndex);
-  }, [activeStory, feedType, stories]);
+  const persistCurrentFeedPosition = useCallback(() => {
+    saveFeedScroll(feedType, scrollRef.current?.scrollTop ?? 0);
+  }, [feedType]);
+
+  // Keep refs updated for pagehide (runs during unload when closure may be stale)
+  const feedTypeRef = useRef(feedType);
+  feedTypeRef.current = feedType;
 
   useEffect(() => {
-    if (stories.length === 0) return;
-    if (selectedIndex < stories.length) return;
-    setSelectedIndex(stories.length - 1);
-  }, [selectedIndex, stories.length]);
+    const scrollElement = scrollRef.current;
+    if (!scrollElement) return;
 
-  // Keyboard navigation
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (isInputFocused()) return;
-
-      const feedKeys: Record<string, FeedType> = {
-        "1": "top",
-        "2": "new",
-        "3": "best",
-        "4": "ask",
-        "5": "show",
-        "6": "jobs",
-      };
-
-      switch (e.key) {
-        case "j":
-        case "ArrowDown": {
-          e.preventDefault();
-          const next = Math.min(selectedIndex + 1, stories.length - 1);
-          if (next >= stories.length - 3 && hasMore) loadMore();
-          setSelectedIndex(next);
-          const nextStory = stories[next];
-          if (nextStory) $activeStory.set({ feedType, storyId: nextStory.id });
-          virtualizer.scrollToIndex(next, { align: "auto", behavior: "smooth" });
-          break;
-        }
-        case "k":
-        case "ArrowUp": {
-          e.preventDefault();
-          const prev = Math.max(selectedIndex - 1, 0);
-          setSelectedIndex(prev);
-          const prevStory = stories[prev];
-          if (prevStory) $activeStory.set({ feedType, storyId: prevStory.id });
-          virtualizer.scrollToIndex(prev, { align: "auto", behavior: "smooth" });
-          break;
-        }
-        case "Enter":
-          e.preventDefault();
-          if (stories[selectedIndex]) {
-            $activeStory.set({ feedType, storyId: stories[selectedIndex].id });
-            onStoryClick(stories[selectedIndex].id);
-          }
-          break;
-        case "o": {
-          e.preventDefault();
-          const story = stories[selectedIndex];
-          if (story?.url) {
-            window.open(story.url, "_blank", "noopener,noreferrer");
-          }
-          break;
-        }
-        case "/":
-          e.preventDefault();
-          onSearch();
-          break;
-        case "t":
-          e.preventDefault();
-          toggleTheme();
-          break;
-        case "?":
-          e.preventDefault();
-          onToggleShortcuts();
-          break;
-        case "r":
-          e.preventDefault();
-          queryClient.invalidateQueries({ queryKey: ["storyIds"] });
-          break;
-        case "]":
-          e.preventDefault();
-          loadMore();
-          break;
-        case "[":
-          e.preventDefault();
-          if (page > 0) {
-            setPage((p) => p - 1);
-            setSelectedIndex(0);
-          }
-          break;
-        default:
-          if (feedKeys[e.key]) {
-            e.preventDefault();
-            window.location.hash = feedKeys[e.key];
-          }
-      }
+    const persistScroll = () => {
+      saveFeedScroll(feedTypeRef.current, scrollElement.scrollTop);
     };
 
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [
-    stories,
-    selectedIndex,
-    hasMore,
-    page,
-    loadMore,
-    virtualizer,
-    onStoryClick,
-    onSearch,
-    onToggleShortcuts,
-    toggleTheme,
-    queryClient,
-  ]);
+    scrollElement.addEventListener("scroll", persistScroll, { passive: true });
+
+    const onPageHide = () => {
+      persistScroll();
+    };
+    window.addEventListener("pagehide", onPageHide);
+
+    return () => {
+      persistScroll();
+      scrollElement.removeEventListener("scroll", persistScroll);
+      window.removeEventListener("pagehide", onPageHide);
+    };
+  });
+
+  useLayoutEffect(() => {
+    if (hasRestoredScrollRef.current || idsLoading || isLoading || isLoadingMore) return;
+    if (stories.length === 0) return;
+
+    const savedTop = feedScrollTop.get(feedType) ?? readSavedFeedScroll(feedType);
+    if (savedTop == null) return;
+
+    hasRestoredScrollRef.current = true;
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const restore = () => {
+      el.scrollTop = savedTop;
+    };
+    requestAnimationFrame(() => {
+      requestAnimationFrame(restore);
+    });
+  }, [feedType, idsLoading, isLoading, isLoadingMore, stories.length]);
+
+  useLayoutEffect(() => {
+    if (hasRestoredStoryAnchorRef.current || hasRestoredScrollRef.current) return;
+    if (idsLoading || isLoading || isLoadingMore) return;
+    if (restoredIndex < 0 || stories.length === 0) return;
+
+    hasRestoredStoryAnchorRef.current = true;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        virtualizer.scrollToIndex(restoredIndex, { align: "center", behavior: "auto" });
+      });
+    });
+  }, [idsLoading, isLoading, isLoadingMore, restoredIndex, stories.length, virtualizer]);
+
+  useHotkeys({
+    j: () => {
+      const next = Math.min(selectedIndex + 1, stories.length - 1);
+      if (next >= stories.length - 3 && hasMore) loadMore();
+      setSelectedIndex(next);
+      const nextStory = stories[next];
+      if (nextStory) $activeStory.set({ feedType, storyId: nextStory.id });
+      virtualizer.scrollToIndex(next, { align: "auto", behavior: "smooth" });
+    },
+    ArrowDown: () => {
+      const next = Math.min(selectedIndex + 1, stories.length - 1);
+      if (next >= stories.length - 3 && hasMore) loadMore();
+      setSelectedIndex(next);
+      const nextStory = stories[next];
+      if (nextStory) $activeStory.set({ feedType, storyId: nextStory.id });
+      virtualizer.scrollToIndex(next, { align: "auto", behavior: "smooth" });
+    },
+    k: () => {
+      const prev = Math.max(selectedIndex - 1, 0);
+      setSelectedIndex(prev);
+      const prevStory = stories[prev];
+      if (prevStory) $activeStory.set({ feedType, storyId: prevStory.id });
+      virtualizer.scrollToIndex(prev, { align: "auto", behavior: "smooth" });
+    },
+    ArrowUp: () => {
+      const prev = Math.max(selectedIndex - 1, 0);
+      setSelectedIndex(prev);
+      const prevStory = stories[prev];
+      if (prevStory) $activeStory.set({ feedType, storyId: prevStory.id });
+      virtualizer.scrollToIndex(prev, { align: "auto", behavior: "smooth" });
+    },
+    Enter: () => {
+      if (stories[selectedIndex]) {
+        $activeStory.set({ feedType, storyId: stories[selectedIndex].id });
+        persistCurrentFeedPosition();
+        onStoryClick(stories[selectedIndex].id);
+      }
+    },
+    o: () => {
+      const story = stories[selectedIndex];
+      if (story?.url) window.open(story.url, "_blank", "noopener,noreferrer");
+    },
+    "/": () => {
+      persistCurrentFeedPosition();
+      onSearch();
+    },
+    t: () => toggleTheme(),
+    "?": () => onToggleShortcuts(),
+    r: () => {
+      queryClient.invalidateQueries({ queryKey: ["storyIds"] });
+      queryClient.invalidateQueries({ queryKey: ["item"] });
+    },
+    "]": () => loadMore(),
+    "[": () => {
+      if (page > 0) {
+        setPage((p) => p - 1);
+        setSelectedIndex(0);
+        scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    },
+    "1": () => {
+      persistCurrentFeedPosition();
+      window.location.assign(feedPath("top"));
+    },
+    "2": () => {
+      persistCurrentFeedPosition();
+      window.location.assign(feedPath("new"));
+    },
+    "3": () => {
+      persistCurrentFeedPosition();
+      window.location.assign(feedPath("best"));
+    },
+    "4": () => {
+      persistCurrentFeedPosition();
+      window.location.assign(feedPath("ask"));
+    },
+    "5": () => {
+      persistCurrentFeedPosition();
+      window.location.assign(feedPath("show"));
+    },
+    "6": () => {
+      persistCurrentFeedPosition();
+      window.location.assign(feedPath("jobs"));
+    },
+  });
 
   if (idsLoading || isLoading) {
     return (
-      <div className="py-4">
-        <div className="space-y-0.5">
-          {Array.from({ length: 15 }, (_, i) => (
-            <StoryItemSkeleton key={i} rank={i + 1} />
-          ))}
-        </div>
+      <div className="flex items-center justify-center py-16">
+        <SpinnerIcon size={24} className="animate-spin text-fg-muted" />
       </div>
     );
   }
@@ -188,7 +259,7 @@ export function StoryList({
   const virtualItems = virtualizer.getVirtualItems();
 
   return (
-    <div ref={listRef} className="py-3">
+    <div ref={scrollRef} className="h-full overflow-y-auto overscroll-contain py-3">
       {/* Virtualized story list */}
       <div
         style={{
@@ -199,11 +270,8 @@ export function StoryList({
       >
         <div
           style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
+            position: "relative",
             width: "100%",
-            transform: `translateY(${(virtualItems[0]?.start ?? 0) - virtualizer.options.scrollMargin}px)`,
           }}
         >
           {virtualItems.map((virtualRow) => {
@@ -211,20 +279,35 @@ export function StoryList({
             if (!story) return null;
             const i = virtualRow.index;
             return (
-              <div key={story.id} data-index={virtualRow.index} ref={virtualizer.measureElement}>
+              <div
+                key={story.id}
+                data-index={virtualRow.index}
+                ref={virtualizer.measureElement}
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  transform: `translateY(${virtualRow.start}px)`,
+                }}
+              >
                 <StoryItem
                   story={story}
                   rank={i + 1}
                   isSelected={i === selectedIndex}
                   onClick={() => {
                     $activeStory.set({ feedType, storyId: story.id });
+                    persistCurrentFeedPosition();
                     onStoryClick(story.id);
                   }}
                   onHover={() => {
                     setSelectedIndex(i);
                     $activeStory.set({ feedType, storyId: story.id });
                   }}
-                  onUserClick={onUserClick}
+                  onUserClick={(id) => {
+                    persistCurrentFeedPosition();
+                    onUserClick(id);
+                  }}
                   onPrefetch={() => prefetchItem(story.id)}
                 />
               </div>
@@ -241,19 +324,21 @@ export function StoryList({
         <div className="flex items-center gap-2">
           {page > 0 && (
             <button
+              type="button"
               onClick={() => {
                 setPage((p) => p - 1);
                 setSelectedIndex(0);
-                window.scrollTo({ top: 0, behavior: "smooth" });
+                scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
               }}
               className="flex items-center gap-1 px-3 py-1.5 text-xs text-fg-muted hover:text-fg bg-surface hover:bg-surface-hover border border-edge rounded-md transition-colors"
             >
-              <CaretLeft size={12} />
+              <CaretLeftIcon size={12} />
               Prev
             </button>
           )}
           {hasMore && (
             <button
+              type="button"
               onClick={() => {
                 loadMore();
                 setSelectedIndex(stories.length);
@@ -263,13 +348,13 @@ export function StoryList({
             >
               {isLoadingMore ? (
                 <>
-                  <Spinner size={12} className="animate-spin" />
+                  <SpinnerIcon size={12} className="animate-spin" />
                   Loading...
                 </>
               ) : (
                 <>
                   More
-                  <CaretRight size={12} />
+                  <CaretRightIcon size={12} />
                 </>
               )}
             </button>

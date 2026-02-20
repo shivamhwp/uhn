@@ -1,0 +1,13 @@
+---
+import { SearchIsland } from "../components/islands/SearchIsland";
+import SiteLayout from "../layouts/SiteLayout.astro";
+
+export const prerender = false;
+
+const searchQuery = (Astro.url.searchParams.get("q") ?? "").trim();
+const title = searchQuery ? `Search: ${searchQuery} | uhn` : "Search | uhn";
+---
+
+<SiteLayout title={title} searchQuery={searchQuery}>
+  <SearchIsland client:only="react" initialQuery={searchQuery} />
+</SiteLayout>

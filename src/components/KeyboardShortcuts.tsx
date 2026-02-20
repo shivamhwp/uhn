@@ -1,6 +1,5 @@
-import { X } from "@phosphor-icons/react";
-import { useEffect } from "react";
-import { isInputFocused } from "../lib/utils";
+import { XIcon } from "@phosphor-icons/react";
+import { useHotkeys } from "../lib/useHotkeys";
 
 interface Props {
   isOpen: boolean;
@@ -18,42 +17,56 @@ const shortcuts = [
   { keys: ["t"], desc: "Toggle theme" },
   { keys: ["1–6"], desc: "Switch feed" },
   { keys: ["[", "]"], desc: "Prev / next page" },
+  { keys: ["⌘/ctrl", "k"], desc: "Toggle shortcuts" },
   { keys: ["?"], desc: "Toggle shortcuts" },
 ];
 
 export function KeyboardShortcuts({ isOpen, onClose }: Props) {
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (isInputFocused()) return;
-      if (e.key === "?" && isOpen) {
-        e.preventDefault();
-        onClose();
-      }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [isOpen, onClose]);
+  useHotkeys(
+    isOpen
+      ? {
+          "?": () => onClose(),
+          Escape: () => onClose(),
+        }
+      : {},
+  );
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed top-16 right-4 z-50 hidden sm:block animate-fade">
-      <div className="bg-surface/90 backdrop-blur-md border border-edge rounded-lg shadow-lg w-64">
-        <div className="flex items-center justify-between px-4 py-2.5 border-b border-edge/50">
-          <span className="text-xs font-medium text-fg-muted">Keyboard Shortcuts</span>
-          <button onClick={onClose} className="text-fg-faint hover:text-fg transition-colors p-0.5">
-            <X size={13} weight="bold" />
+    <div
+      className="fixed inset-0 z-50 animate-fade bg-bg/60 backdrop-blur-sm flex items-center justify-center p-4"
+      onPointerDown={onClose}
+    >
+      <div
+        className="bg-surface/95 border border-edge rounded-xl shadow-lg w-full max-w-md"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Keyboard shortcuts"
+        onPointerDown={(event) => event.stopPropagation()}
+      >
+        <div className="flex items-center justify-between px-5 py-3 border-b border-edge/50">
+          <span className="text-sm font-medium text-fg-muted">Keyboard Shortcuts</span>
+          <button
+            onClick={onClose}
+            className="text-fg-faint hover:text-fg transition-colors p-0.5"
+            type="button"
+          >
+            <XIcon size={15} weight="bold" />
           </button>
         </div>
-        <div className="px-4 py-2">
+        <div className="px-5 py-3">
           {shortcuts.map((s) => (
-            <div key={s.desc} className="flex items-center justify-between py-1.5">
-              <span className="text-[11px] text-fg-muted">{s.desc}</span>
+            <div
+              key={`${s.desc}-${s.keys.join("-")}`}
+              className="flex items-center justify-between py-2"
+            >
+              <span className="text-xs text-fg-muted">{s.desc}</span>
               <div className="flex items-center gap-1">
                 {s.keys.map((key) => (
                   <kbd
                     key={key}
-                    className="inline-flex items-center justify-center min-w-5 h-5 px-1 text-[10px] font-medium text-fg-faint bg-kbd border border-kbd-edge rounded"
+                    className="inline-flex items-center justify-center min-w-6 h-6 px-1.5 text-xs font-medium text-fg-faint bg-kbd border border-kbd-edge rounded"
                   >
                     {key}
                   </kbd>
