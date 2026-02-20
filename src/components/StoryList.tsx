@@ -5,7 +5,7 @@ import { useStore } from "@nanostores/react";
 import { useStoryIds, useStoriesPage, usePrefetchItem, ITEMS_PER_PAGE } from "../lib/hooks";
 import { useTheme } from "./ThemeProvider";
 import { isInputFocused } from "../lib/utils";
-import { $activeStory } from "../lib/stores";
+import { $activeStory, $feedPage } from "../lib/stores";
 import { StoryItem, StoryItemSkeleton } from "./StoryItem";
 import { CaretLeft, CaretRight, Spinner } from "@phosphor-icons/react";
 import type { FeedType } from "../lib/types";
@@ -26,7 +26,15 @@ export function StoryList({
   onToggleShortcuts,
 }: Props) {
   const activeStory = useStore($activeStory);
-  const [page, setPage] = useState(0);
+  const feedPages = useStore($feedPage);
+  const page = feedPages[feedType] ?? 0;
+  const setPage = useCallback(
+    (action: number | ((p: number) => number)) => {
+      const next = typeof action === "function" ? action(page) : action;
+      $feedPage.set({ ...$feedPage.get(), [feedType]: next });
+    },
+    [feedType, page],
+  );
   const [selectedIndex, setSelectedIndex] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
   const { toggle: toggleTheme } = useTheme();
