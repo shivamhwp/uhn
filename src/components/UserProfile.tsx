@@ -6,7 +6,7 @@ import { formatDate, timeAgo, extractDomain, isInputFocused } from "../lib/utils
 import type { HNItem } from "../lib/types";
 import { useQueries } from "@tanstack/react-query";
 import { fetchItem } from "../lib/api";
-import { $userProfileShowCount } from "../lib/stores";
+import { $userProfileShowCount, setUserProfileShowCountEntry } from "../lib/stores";
 
 interface Props {
   userId: string;
@@ -22,7 +22,7 @@ export function UserProfile({ userId, onBack, onStoryClick }: Props) {
   const showCount = showCounts[userId] ?? SUBMISSIONS_PER_PAGE;
   const setShowCount = (action: number | ((c: number) => number)) => {
     const next = typeof action === "function" ? action(showCount) : action;
-    $userProfileShowCount.set({ ...$userProfileShowCount.get(), [userId]: next });
+    setUserProfileShowCountEntry(userId, next);
   };
 
   const submissionIds = user?.submitted?.slice(0, showCount) ?? [];

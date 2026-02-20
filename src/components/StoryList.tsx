@@ -30,10 +30,11 @@ export function StoryList({
   const page = feedPages[feedType] ?? 0;
   const setPage = useCallback(
     (action: number | ((p: number) => number)) => {
-      const next = typeof action === "function" ? action(page) : action;
+      const currentPage = $feedPage.get()[feedType] ?? 0;
+      const next = typeof action === "function" ? action(currentPage) : action;
       $feedPage.set({ ...$feedPage.get(), [feedType]: next });
     },
-    [feedType, page],
+    [feedType],
   );
   const [selectedIndex, setSelectedIndex] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
@@ -48,7 +49,7 @@ export function StoryList({
 
   const loadMore = useCallback(() => {
     if (hasMore) setPage((p) => p + 1);
-  }, [hasMore]);
+  }, [hasMore, setPage]);
 
   // Measure list offset from top of document for window virtualizer
   const parentOffsetRef = useRef(0);

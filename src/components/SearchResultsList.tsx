@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useStore } from "@nanostores/react";
 import { ArrowSquareOut, CaretLeft, CaretRight, Spinner } from "@phosphor-icons/react";
 import { useSearch } from "../lib/hooks";
 import { extractDomain, isInputFocused, timeAgo } from "../lib/utils";
-import { $searchPage } from "../lib/stores";
+import { $searchPage, setSearchPageEntry } from "../lib/stores";
 
 interface Props {
   query: string;
@@ -15,15 +15,20 @@ export function SearchResultsList({ query, onStoryClick, onUserClick }: Props) {
   const searchPages = useStore($searchPage);
   const page = searchPages[query] ?? 0;
   const setPage = (action: number | ((p: number) => number)) => {
-    const next = typeof action === "function" ? action(page) : action;
-    $searchPage.set({ ...$searchPage.get(), [query]: next });
+    const currentPage = $searchPage.get()[query] ?? 0;
+    const next = typeof action === "function" ? action(currentPage) : action;
+    setSearchPageEntry(query, next);
   };
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const prevQueryRef = useRef<string | null>(null);
   const { data, isFetching } = useSearch({ query, dateFrom: "", dateTo: "", page });
   const hits = data?.hits ?? [];
 
   useEffect(() => {
-    $searchPage.set({ ...$searchPage.get(), [query]: 0 });
+    if (prevQueryRef.current != null && prevQueryRef.current !== query) {
+      setSearchPageEntry(query, 0);
+    }
+    prevQueryRef.current = query;
     setSelectedIndex(0);
   }, [query]);
 
@@ -63,7 +68,7 @@ export function SearchResultsList({ query, onStoryClick, onUserClick }: Props) {
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [data, hits, onStoryClick, page, selectedIndex]);
+  }, [data, hits, onStoryClick, page, query, selectedIndex]);
 
   if (!query.trim()) {
     return (
