@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+import { useStore } from "@nanostores/react";
 import { ArrowSquareOut, CaretLeft, CaretRight, Spinner } from "@phosphor-icons/react";
 import { useSearch } from "../lib/hooks";
 import { extractDomain, isInputFocused, timeAgo } from "../lib/utils";
+import { $searchPage } from "../lib/stores";
 
 interface Props {
   query: string;
@@ -10,13 +12,18 @@ interface Props {
 }
 
 export function SearchResultsList({ query, onStoryClick, onUserClick }: Props) {
-  const [page, setPage] = useState(0);
+  const searchPages = useStore($searchPage);
+  const page = searchPages[query] ?? 0;
+  const setPage = (action: number | ((p: number) => number)) => {
+    const next = typeof action === "function" ? action(page) : action;
+    $searchPage.set({ ...$searchPage.get(), [query]: next });
+  };
   const [selectedIndex, setSelectedIndex] = useState(0);
   const { data, isFetching } = useSearch({ query, dateFrom: "", dateTo: "", page });
   const hits = data?.hits ?? [];
 
   useEffect(() => {
-    setPage(0);
+    $searchPage.set({ ...$searchPage.get(), [query]: 0 });
     setSelectedIndex(0);
   }, [query]);
 
