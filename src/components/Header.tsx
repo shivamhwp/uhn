@@ -6,7 +6,6 @@ import {
   ClockIcon,
   EyeIcon,
   FireIcon,
-  KeyboardIcon,
   ListIcon,
   MagnifyingGlassIcon,
   MoonIcon,
@@ -41,7 +40,6 @@ interface Props {
   onSearchOpen: () => void;
   onSearchClose: () => void;
   onSearchQueryChange: (query: string) => void;
-  onToggleShortcuts: () => void;
 }
 
 export function Header({
@@ -52,7 +50,6 @@ export function Header({
   onSearchOpen,
   onSearchClose,
   onSearchQueryChange,
-  onToggleShortcuts,
 }: Props) {
   const { theme, toggle } = useTheme();
   const queryClient = useQueryClient();
@@ -243,14 +240,6 @@ export function Header({
             type="button"
           >
             {theme === "dark" ? <SunIcon size={16} /> : <MoonIcon size={16} />}
-          </button>
-          <button
-            onClick={onToggleShortcuts}
-            className="hidden sm:block p-2 rounded-md text-fg-muted hover:text-fg hover:bg-surface-hover transition-colors"
-            title="Keyboard shortcuts (?)"
-            type="button"
-          >
-            <KeyboardIcon size={16} />
           </button>
         </div>
       </div>

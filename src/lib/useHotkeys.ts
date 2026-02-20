@@ -20,11 +20,9 @@ export function useHotkeys(
     const manager = getHotkeyManager();
     const hotkeys = Object.keys(handlersRef.current);
     const registrationHandles = hotkeys.map((hotkey) =>
-      manager.register(
-        hotkey,
-        (e) => handlersRef.current[hotkey]?.(e),
-        { target: options?.target ?? document },
-      ),
+      manager.register(hotkey, (e) => handlersRef.current[hotkey]?.(e), {
+        target: options?.target ?? document,
+      }),
     );
     return () => registrationHandles.forEach((h) => h.unregister());
   }, [hotkeyList, options?.target]);

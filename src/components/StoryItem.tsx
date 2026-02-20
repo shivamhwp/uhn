@@ -28,7 +28,7 @@ export function StoryItem({
   return (
     <div
       data-rank={rank}
-      className={`group relative flex gap-3 px-3 py-2.5 rounded-none sm:rounded-md cursor-pointer transition-all duration-150 ${
+      className={`group relative flex gap-4 px-3.5 py-3.5 rounded-none sm:rounded-md cursor-pointer transition-all duration-150 ${
         isSelected ? "sm:bg-accent-subtle sm:ring-1 sm:ring-accent/20" : "sm:hover:bg-surface-hover"
       }`}
       onClick={onClick}
@@ -39,9 +39,9 @@ export function StoryItem({
       style={style}
     >
       {/* Rank number */}
-      <div className="shrink-0 w-8 text-right">
+      <div className="shrink-0 w-10 text-right">
         <span
-          className={`text-xs tabular-nums ${
+          className={`text-sm tabular-nums ${
             isSelected ? "text-fg-faint sm:text-accent sm:font-semibold" : "text-fg-faint"
           }`}
         >
@@ -54,7 +54,7 @@ export function StoryItem({
         {/* Title row */}
         <div className="flex items-baseline gap-2">
           <h3
-            className={`text-lg leading-snug font-medium ${
+            className={`text-xl leading-snug font-medium ${
               isSelected ? "text-fg sm:text-accent" : "text-fg sm:group-hover:text-accent"
             } transition-colors`}
           >
@@ -66,10 +66,10 @@ export function StoryItem({
         </div>
 
         {/* Meta row */}
-        <div className="flex items-center flex-wrap gap-x-3 gap-y-0.5 mt-1 text-sm text-fg-muted">
+        <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-1.5 text-base text-fg-muted">
           {story.score != null && (
             <span className="flex items-center gap-1">
-              <ArrowFatUp size={11} weight="bold" className="text-accent/70" />
+              <ArrowFatUp size={13} weight="bold" className="text-accent/70" />
               {story.score}
             </span>
           )}
@@ -81,14 +81,14 @@ export function StoryItem({
               }}
               className="flex items-center gap-1 hover:text-accent transition-colors"
             >
-              <User size={11} />
+              <User size={13} />
               {story.by}
             </button>
           )}
           <span className="text-fg-faint">{timeAgo(story.time)}</span>
           {story.descendants != null && (
             <span className="flex items-center gap-1">
-              <ChatCircle size={11} />
+              <ChatCircle size={13} />
               {story.descendants}
             </span>
           )}
@@ -100,7 +100,7 @@ export function StoryItem({
               onClick={(e) => e.stopPropagation()}
               className="flex items-center gap-1 text-fg-faint hover:text-accent transition-colors ml-auto opacity-0 group-hover:opacity-100"
             >
-              <ArrowSquareOut size={11} />
+              <ArrowSquareOut size={13} />
             </a>
           )}
         </div>
@@ -111,13 +111,13 @@ export function StoryItem({
 
 export function StoryItemSkeleton({ rank }: { rank: number }) {
   return (
-    <div className="flex gap-3 px-3 py-2.5">
-      <div className="shrink-0 w-8 text-right">
-        <span className="text-xs text-fg-faint tabular-nums">{rank}</span>
+    <div className="flex gap-4 px-3.5 py-3.5">
+      <div className="shrink-0 w-10 text-right">
+        <span className="text-sm text-fg-faint tabular-nums">{rank}</span>
       </div>
       <div className="flex-1 space-y-2">
-        <div className="skeleton h-4 w-3/4" />
-        <div className="skeleton h-3 w-1/3" />
+        <div className="skeleton h-5 w-3/4" />
+        <div className="skeleton h-4 w-1/3" />
       </div>
     </div>
   );

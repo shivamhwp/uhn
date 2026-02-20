@@ -65,9 +65,11 @@ function getHashServerSnapshot() {
 function AppShell() {
   const hash = useSyncExternalStore(subscribeToHash, getHashSnapshot, getHashServerSnapshot);
   const route = useMemo(() => parseHash(hash), [hash]);
-  const [showShortcuts, setShowShortcuts] = useState(true);
+  const [showShortcuts, setShowShortcuts] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const toggleShortcuts = useCallback(() => setShowShortcuts((show) => !show), []);
+  const isFeedListView = route.view === "feed" && !searchOpen;
 
   useHotkeys(
     searchOpen
@@ -78,9 +80,17 @@ function AppShell() {
             setSearchQuery("");
             if (shouldGoHome) window.location.hash = "top";
           },
+          "Mod+k": (event) => {
+            event.preventDefault();
+            toggleShortcuts();
+          },
         }
       : {
           "/": () => setSearchOpen(true),
+          "Mod+k": (event) => {
+            event.preventDefault();
+            toggleShortcuts();
+          },
         },
   );
 
@@ -113,7 +123,9 @@ function AppShell() {
   const goBack = useCallback(() => window.history.back(), []);
 
   return (
-    <div className="min-h-screen bg-bg text-fg transition-colors duration-200">
+    <div
+      className={`min-h-screen bg-bg text-fg transition-colors duration-200 ${isFeedListView ? "h-dvh overflow-hidden" : ""}`}
+    >
       <Header
         route={route}
         onFeedChange={goToFeed}
@@ -125,9 +137,10 @@ function AppShell() {
           setSearchQuery("");
         }}
         onSearchQueryChange={setSearchQuery}
-        onToggleShortcuts={() => setShowShortcuts((s) => !s)}
       />
-      <main className="w-full max-w-4xl mx-auto px-0.5 sm:px-4 pt-16 pb-4 sm:pb-12">
+      <main
+        className={`w-full max-w-4xl mx-auto px-0.5 sm:px-4 pt-16 ${isFeedListView ? "h-[calc(100dvh-4rem)] pb-0 overflow-hidden" : "pb-4 sm:pb-12"}`}
+      >
         {route.view === "feed" &&
           (searchOpen ? (
             <SearchResultsList
@@ -142,7 +155,7 @@ function AppShell() {
               onStoryClick={goToStory}
               onUserClick={goToUser}
               onSearch={() => setSearchOpen(true)}
-              onToggleShortcuts={() => setShowShortcuts((s) => !s)}
+              onToggleShortcuts={toggleShortcuts}
             />
           ))}
         {route.view === "story" && (

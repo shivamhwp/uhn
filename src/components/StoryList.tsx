@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from "react";
-import { useWindowVirtualizer } from "@tanstack/react-virtual";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { useQueryClient } from "@tanstack/react-query";
 import { useStore } from "@nanostores/react";
 import { useStoryIds, useStoriesPage, usePrefetchItem, ITEMS_PER_PAGE } from "../lib/hooks";
@@ -37,8 +37,7 @@ export function StoryList({
     [feedType],
   );
   const [selectedIndexState, setSelectedIndexState] = useState(0);
-  const [scrollMargin, setScrollMargin] = useState(0);
-  const listRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const { toggle: toggleTheme } = useTheme();
   const queryClient = useQueryClient();
   const prefetchItem = usePrefetchItem();
@@ -65,13 +64,13 @@ export function StoryList({
 
   const setSelectedIndex = setSelectedIndexState;
 
-  const virtualizer = useWindowVirtualizer({
+  const virtualizer = useVirtualizer({
     count: stories.length,
-    estimateSize: () => 60,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => 84,
     overscan: 5,
-    scrollMargin,
-    scrollPaddingStart: 100,
-    scrollPaddingEnd: 280,
+    scrollPaddingStart: 80,
+    scrollPaddingEnd: 220,
   });
 
   useHotkeys({
@@ -124,7 +123,7 @@ export function StoryList({
       if (page > 0) {
         setPage((p) => p - 1);
         setSelectedIndex(0);
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
       }
     },
     "1": () => (window.location.hash = "top"),
@@ -150,16 +149,7 @@ export function StoryList({
   const virtualItems = virtualizer.getVirtualItems();
 
   return (
-    <div
-      ref={(el) => {
-        listRef.current = el;
-        if (el) {
-          const top = el.offsetTop;
-          if (top !== scrollMargin) setScrollMargin(top);
-        }
-      }}
-      className="py-3"
-    >
+    <div ref={scrollRef} className="h-full overflow-y-auto overscroll-contain py-3">
       {/* Virtualized story list */}
       <div
         style={{
@@ -170,11 +160,8 @@ export function StoryList({
       >
         <div
           style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
+            position: "relative",
             width: "100%",
-            transform: `translateY(${(virtualItems[0]?.start ?? 0) - virtualizer.options.scrollMargin}px)`,
           }}
         >
           {virtualItems.map((virtualRow) => {
@@ -182,7 +169,18 @@ export function StoryList({
             if (!story) return null;
             const i = virtualRow.index;
             return (
-              <div key={story.id} data-index={virtualRow.index} ref={virtualizer.measureElement}>
+              <div
+                key={story.id}
+                data-index={virtualRow.index}
+                ref={virtualizer.measureElement}
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  transform: `translateY(${virtualRow.start}px)`,
+                }}
+              >
                 <StoryItem
                   story={story}
                   rank={i + 1}
@@ -215,7 +213,7 @@ export function StoryList({
               onClick={() => {
                 setPage((p) => p - 1);
                 setSelectedIndex(0);
-                window.scrollTo({ top: 0, behavior: "smooth" });
+                scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
               }}
               className="flex items-center gap-1 px-3 py-1.5 text-xs text-fg-muted hover:text-fg bg-surface hover:bg-surface-hover border border-edge rounded-md transition-colors"
             >
