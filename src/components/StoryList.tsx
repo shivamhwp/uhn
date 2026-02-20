@@ -36,7 +36,8 @@ export function StoryList({
     },
     [feedType],
   );
-  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [selectedIndexState, setSelectedIndexState] = useState(0);
+  const [scrollMargin, setScrollMargin] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
   const { toggle: toggleTheme } = useTheme();
   const queryClient = useQueryClient();
@@ -51,34 +52,27 @@ export function StoryList({
     if (hasMore) setPage((p) => p + 1);
   }, [hasMore, setPage]);
 
-  // Measure list offset from top of document for window virtualizer
-  const parentOffsetRef = useRef(0);
-  useEffect(() => {
-    parentOffsetRef.current = listRef.current?.offsetTop ?? 0;
-  }, []);
+  const restoredIndex =
+    activeStory?.feedType === feedType
+      ? stories.findIndex((s) => s.id === activeStory.storyId)
+      : -1;
+  const selectedIndex =
+    restoredIndex >= 0
+      ? restoredIndex
+      : stories.length === 0
+        ? 0
+        : Math.min(selectedIndexState, stories.length - 1);
+
+  const setSelectedIndex = setSelectedIndexState;
 
   const virtualizer = useWindowVirtualizer({
     count: stories.length,
     estimateSize: () => 60,
     overscan: 5,
-    scrollMargin: parentOffsetRef.current,
-    // Breathing room so selected item isn't pinned to viewport edges
+    scrollMargin,
     scrollPaddingStart: 100,
     scrollPaddingEnd: 280,
   });
-
-  useEffect(() => {
-    if (stories.length === 0 || activeStory?.feedType !== feedType) return;
-    const restoredIndex = stories.findIndex((story) => story.id === activeStory.storyId);
-    if (restoredIndex < 0) return;
-    setSelectedIndex(restoredIndex);
-  }, [activeStory, feedType, stories]);
-
-  useEffect(() => {
-    if (stories.length === 0) return;
-    if (selectedIndex < stories.length) return;
-    setSelectedIndex(stories.length - 1);
-  }, [selectedIndex, stories.length]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -197,7 +191,16 @@ export function StoryList({
   const virtualItems = virtualizer.getVirtualItems();
 
   return (
-    <div ref={listRef} className="py-3">
+    <div
+      ref={(el) => {
+        listRef.current = el;
+        if (el) {
+          const top = el.offsetTop;
+          if (top !== scrollMargin) setScrollMargin(top);
+        }
+      }}
+      className="py-3"
+    >
       {/* Virtualized story list */}
       <div
         style={{
