@@ -1,0 +1,30 @@
+---
+import { FeedIsland } from "../components/islands/FeedIsland";
+import { feedLabels, feedOrder, isFeedType } from "../lib/feeds";
+import type { FeedType } from "../lib/types";
+import SiteLayout from "../layouts/SiteLayout.astro";
+
+export const getStaticPaths = () => feedOrder.map((feed) => ({ params: { feed } }));
+
+const feedParam = Astro.params.feed ?? "";
+
+if (!isFeedType(feedParam)) {
+  Astro.response.status = 404;
+}
+
+const feedType = feedParam as FeedType;
+---
+
+{
+  isFeedType(feedParam) ? (
+    <SiteLayout title={`${feedLabels[feedType]} | uhn`} activeFeed={feedType}>
+      <section class="h-[calc(100dvh-4rem)] overflow-hidden">
+        <FeedIsland client:only="react" feedType={feedType} />
+      </section>
+    </SiteLayout>
+  ) : (
+    <SiteLayout title="Not Found | uhn">
+      <div class="py-12 px-4 text-center text-sm text-fg-faint">Invalid feed.</div>
+    </SiteLayout>
+  )
+}

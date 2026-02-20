@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { useStore } from "@nanostores/react";
-import { ArrowSquareOut, CaretLeft, CaretRight, Spinner } from "@phosphor-icons/react";
+import {
+  ArrowSquareOutIcon,
+  CaretLeftIcon,
+  CaretRightIcon,
+  SpinnerIcon,
+} from "@phosphor-icons/react";
 import { useSearch } from "../lib/hooks";
 import { extractDomain, timeAgo } from "../lib/utils";
 import { $searchPage, setSearchPageEntry } from "../lib/stores";
@@ -66,7 +71,7 @@ export function SearchResultsList({ query, onStoryClick, onUserClick }: Props) {
       <div className="flex items-center justify-between mb-2 px-1">
         <span className="text-[11px] text-fg-faint">
           {data?.nbHits?.toLocaleString() ?? 0} results
-          {isFetching && <Spinner size={10} className="animate-spin inline ml-1.5" />}
+          {isFetching && <SpinnerIcon size={10} className="animate-spin inline ml-1.5" />}
         </span>
         {data && data.nbPages > 1 && (
           <span className="text-[11px] text-fg-faint">
@@ -86,11 +91,19 @@ export function SearchResultsList({ query, onStoryClick, onUserClick }: Props) {
             <div
               key={hit.objectID}
               onClick={() => onStoryClick(Number(hit.objectID))}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  onStoryClick(Number(hit.objectID));
+                }
+              }}
               className={`group flex gap-3 px-3 py-2.5 rounded-md cursor-pointer transition-all duration-150 ${
                 i === selectedIndex
                   ? "bg-accent-subtle ring-1 ring-accent/20"
                   : "hover:bg-surface-hover"
               }`}
+              role="button"
+              tabIndex={0}
             >
               <div className="shrink-0 w-8 text-right">
                 <span
@@ -137,7 +150,7 @@ export function SearchResultsList({ query, onStoryClick, onUserClick }: Props) {
                       onClick={(e) => e.stopPropagation()}
                       className="ml-auto opacity-0 group-hover:opacity-100 text-fg-faint hover:text-accent transition-all"
                     >
-                      <ArrowSquareOut size={11} />
+                      <ArrowSquareOutIcon size={11} />
                     </a>
                   )}
                 </div>
@@ -157,7 +170,7 @@ export function SearchResultsList({ query, onStoryClick, onUserClick }: Props) {
             disabled={page === 0}
             className="flex items-center gap-1 px-3 py-1.5 text-xs text-fg-muted hover:text-fg bg-surface hover:bg-surface-hover border border-edge rounded-md transition-colors disabled:opacity-30 disabled:pointer-events-none"
           >
-            <CaretLeft size={12} />
+            <CaretLeftIcon size={12} />
             Prev
           </button>
           <button
@@ -169,7 +182,7 @@ export function SearchResultsList({ query, onStoryClick, onUserClick }: Props) {
             className="flex items-center gap-1 px-3 py-1.5 text-xs text-accent hover:text-accent-hover bg-accent-subtle border border-accent/20 rounded-md transition-colors disabled:opacity-30 disabled:pointer-events-none"
           >
             Next
-            <CaretRight size={12} />
+            <CaretRightIcon size={12} />
           </button>
         </div>
       )}

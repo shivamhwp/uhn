@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CaretDown, CaretRight, User } from "@phosphor-icons/react";
+import { CaretDownIcon, CaretRightIcon, UserIcon, SpinnerIcon } from "@phosphor-icons/react";
 import { useItem } from "../lib/hooks";
 import { timeAgo } from "../lib/utils";
 
@@ -26,14 +26,11 @@ function Comment({ commentId, depth, onUserClick }: CommentProps) {
 
   if (isLoading) {
     return (
-      <div style={{ paddingLeft: depth > 0 ? "var(--comment-indent)" : undefined }}>
-        <div className="flex gap-3 py-2">
-          <div className="flex-1 space-y-1.5">
-            <div className="skeleton h-3 w-32" />
-            <div className="skeleton h-3 w-full" />
-            <div className="skeleton h-3 w-2/3" />
-          </div>
-        </div>
+      <div
+        style={{ paddingLeft: depth > 0 ? "var(--comment-indent)" : undefined }}
+        className="flex items-center py-2"
+      >
+        <SpinnerIcon size={14} className="animate-spin text-fg-muted" />
       </div>
     );
   }
@@ -58,16 +55,16 @@ function Comment({ commentId, depth, onUserClick }: CommentProps) {
             className="text-fg-faint hover:text-fg transition-colors shrink-0"
           >
             {collapsed ? (
-              <CaretRight size={10} weight="bold" />
+              <CaretRightIcon size={10} weight="bold" />
             ) : (
-              <CaretDown size={10} weight="bold" />
+              <CaretDownIcon size={10} weight="bold" />
             )}
           </button>
           <button
             onClick={() => comment.by && onUserClick(comment.by)}
             className="font-medium text-fg-muted hover:text-accent transition-colors flex items-center gap-1"
           >
-            <User size={10} />
+            <UserIcon size={10} />
             {comment.by}
           </button>
           <span className="text-fg-faint">{timeAgo(comment.time)}</span>

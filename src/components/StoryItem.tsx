@@ -1,4 +1,9 @@
-import { ArrowSquareOut, ChatCircle, ArrowFatUp, User } from "@phosphor-icons/react";
+import {
+  ArrowSquareOutIcon,
+  ChatCircleIcon,
+  ArrowFatUpIcon,
+  UserIcon,
+} from "@phosphor-icons/react";
 import { timeAgo, extractDomain } from "../lib/utils";
 import type { HNItem } from "../lib/types";
 
@@ -28,27 +33,24 @@ export function StoryItem({
   return (
     <div
       data-rank={rank}
-      className={`group relative flex gap-4 px-3.5 py-3.5 rounded-none sm:rounded-md cursor-pointer transition-all duration-150 ${
+      className={`group relative flex gap-4  px-4 py-3.5 rounded-none sm:rounded-md cursor-pointer transition-all duration-150 ${
         isSelected ? "sm:bg-accent-subtle sm:ring-1 sm:ring-accent/20" : "sm:hover:bg-surface-hover"
       }`}
       onClick={onClick}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onClick();
+        }
+      }}
       onMouseEnter={() => {
         onHover();
         onPrefetch();
       }}
+      role="button"
+      tabIndex={0}
       style={style}
     >
-      {/* Rank number */}
-      <div className="shrink-0 w-10 text-right">
-        <span
-          className={`text-sm tabular-nums ${
-            isSelected ? "text-fg-faint sm:text-accent sm:font-semibold" : "text-fg-faint"
-          }`}
-        >
-          {rank}
-        </span>
-      </div>
-
       {/* Content */}
       <div className="flex-1 min-w-0">
         {/* Title row */}
@@ -69,26 +71,27 @@ export function StoryItem({
         <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-1.5 text-base text-fg-muted">
           {story.score != null && (
             <span className="flex items-center gap-1">
-              <ArrowFatUp size={13} weight="bold" className="text-accent/70" />
+              <ArrowFatUpIcon size={13} weight="bold" className="text-accent/70" />
               {story.score}
             </span>
           )}
           {story.by && (
             <button
+              type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 onUserClick(story.by!);
               }}
               className="flex items-center gap-1 hover:text-accent transition-colors"
             >
-              <User size={13} />
+              <UserIcon size={13} />
               {story.by}
             </button>
           )}
           <span className="text-fg-faint">{timeAgo(story.time)}</span>
           {story.descendants != null && (
             <span className="flex items-center gap-1">
-              <ChatCircle size={13} />
+              <ChatCircleIcon size={13} />
               {story.descendants}
             </span>
           )}
@@ -100,24 +103,10 @@ export function StoryItem({
               onClick={(e) => e.stopPropagation()}
               className="flex items-center gap-1 text-fg-faint hover:text-accent transition-colors ml-auto opacity-0 group-hover:opacity-100"
             >
-              <ArrowSquareOut size={13} />
+              <ArrowSquareOutIcon size={13} />
             </a>
           )}
         </div>
-      </div>
-    </div>
-  );
-}
-
-export function StoryItemSkeleton({ rank }: { rank: number }) {
-  return (
-    <div className="flex gap-4 px-3.5 py-3.5">
-      <div className="shrink-0 w-10 text-right">
-        <span className="text-sm text-fg-faint tabular-nums">{rank}</span>
-      </div>
-      <div className="flex-1 space-y-2">
-        <div className="skeleton h-5 w-3/4" />
-        <div className="skeleton h-4 w-1/3" />
       </div>
     </div>
   );

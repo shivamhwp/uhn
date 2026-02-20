@@ -1,18 +1,19 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import {
-  ArrowLeft,
-  MagnifyingGlass,
-  CalendarBlank,
-  ArrowSquareOut,
-  Spinner,
-  X,
-  CaretLeft,
-  CaretRight,
+  ArrowLeftIcon,
+  MagnifyingGlassIcon,
+  CalendarBlankIcon,
+  ArrowSquareOutIcon,
+  SpinnerIcon,
+  XIcon,
+  CaretLeftIcon,
+  CaretRightIcon,
 } from "@phosphor-icons/react";
 import { useSearch } from "../lib/hooks";
 import { timeAgo, extractDomain, isInputFocused } from "../lib/utils";
 import { useTheme } from "./ThemeProvider";
 import type { SearchFilters } from "../lib/types";
+import { useHotkeys } from "../lib/useHotkeys";
 
 interface Props {
   onStoryClick: (id: number) => void;
@@ -31,8 +32,12 @@ export function SearchPanel({ onStoryClick, onUserClick, onBack }: Props) {
   });
   const [selectedIndex, setSelectedIndex] = useState(0);
 
-  const { data, isLoading, isFetching } = useSearch(filters);
+  const { data, isFetching } = useSearch(filters);
   const hits = data?.hits ?? [];
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
 
   // Reset page on filter change
   const updateFilter = useCallback((updates: Partial<SearchFilters>) => {
@@ -40,77 +45,52 @@ export function SearchPanel({ onStoryClick, onUserClick, onBack }: Props) {
     setSelectedIndex(0);
   }, []);
 
-  // Keyboard
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      // Allow typing in inputs
-      if (e.key === "Escape") {
-        e.preventDefault();
-        if (document.activeElement === inputRef.current) {
-          inputRef.current?.blur();
-        } else {
-          onBack();
-        }
+  const runWhenListFocused = (handler: () => void) => () => {
+    if (isInputFocused()) return;
+    handler();
+  };
+
+  useHotkeys({
+    Escape: () => {
+      if (document.activeElement === inputRef.current) {
+        inputRef.current?.blur();
         return;
       }
-
-      if (isInputFocused()) return;
-
-      switch (e.key) {
-        case "j":
-        case "ArrowDown":
-          e.preventDefault();
-          setSelectedIndex((i) => Math.min(i + 1, hits.length - 1));
-          break;
-        case "k":
-        case "ArrowUp":
-          e.preventDefault();
-          setSelectedIndex((i) => Math.max(i - 1, 0));
-          break;
-        case "Enter":
-          e.preventDefault();
-          if (hits[selectedIndex]) {
-            onStoryClick(Number(hits[selectedIndex].objectID));
-          }
-          break;
-        case "o": {
-          e.preventDefault();
-          const hit = hits[selectedIndex];
-          if (hit?.url) window.open(hit.url, "_blank", "noopener,noreferrer");
-          break;
-        }
-        case "/":
-          e.preventDefault();
-          inputRef.current?.focus();
-          break;
-        case "h":
-        case "Backspace":
-          e.preventDefault();
-          onBack();
-          break;
-        case "t":
-          e.preventDefault();
-          toggleTheme();
-          break;
-        case "]":
-          e.preventDefault();
-          if (data && filters.page < data.nbPages - 1) {
-            setFilters((prev) => ({ ...prev, page: prev.page + 1 }));
-            setSelectedIndex(0);
-          }
-          break;
-        case "[":
-          e.preventDefault();
-          if (filters.page > 0) {
-            setFilters((prev) => ({ ...prev, page: prev.page - 1 }));
-            setSelectedIndex(0);
-          }
-          break;
+      onBack();
+    },
+    j: runWhenListFocused(() =>
+      setSelectedIndex((i) => Math.min(i + 1, Math.max(hits.length - 1, 0))),
+    ),
+    ArrowDown: runWhenListFocused(() =>
+      setSelectedIndex((i) => Math.min(i + 1, Math.max(hits.length - 1, 0))),
+    ),
+    k: runWhenListFocused(() => setSelectedIndex((i) => Math.max(i - 1, 0))),
+    ArrowUp: runWhenListFocused(() => setSelectedIndex((i) => Math.max(i - 1, 0))),
+    Enter: runWhenListFocused(() => {
+      const hit = hits[selectedIndex];
+      if (hit) onStoryClick(Number(hit.objectID));
+    }),
+    o: runWhenListFocused(() => {
+      const hit = hits[selectedIndex];
+      if (hit?.url) window.open(hit.url, "_blank", "noopener,noreferrer");
+    }),
+    "/": runWhenListFocused(() => inputRef.current?.focus()),
+    h: runWhenListFocused(onBack),
+    Backspace: runWhenListFocused(onBack),
+    t: runWhenListFocused(toggleTheme),
+    "]": runWhenListFocused(() => {
+      if (data && filters.page < data.nbPages - 1) {
+        setFilters((prev) => ({ ...prev, page: prev.page + 1 }));
+        setSelectedIndex(0);
       }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [hits, selectedIndex, data, filters.page, onBack, onStoryClick, toggleTheme]);
+    }),
+    "[": runWhenListFocused(() => {
+      if (filters.page > 0) {
+        setFilters((prev) => ({ ...prev, page: prev.page - 1 }));
+        setSelectedIndex(0);
+      }
+    }),
+  });
 
   const hasFilters = filters.query || filters.dateFrom || filters.dateTo;
 
@@ -121,7 +101,7 @@ export function SearchPanel({ onStoryClick, onUserClick, onBack }: Props) {
         onClick={onBack}
         className="flex items-center gap-1.5 text-xs text-fg-muted hover:text-accent transition-colors mb-4 group"
       >
-        <ArrowLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" />
+        <ArrowLeftIcon size={14} className="group-hover:-translate-x-0.5 transition-transform" />
         Back
         <kbd className="text-[9px] px-1 py-0.5 bg-kbd border border-kbd-edge rounded text-fg-faint ml-1">
           esc
@@ -131,14 +111,13 @@ export function SearchPanel({ onStoryClick, onUserClick, onBack }: Props) {
       {/* Search input */}
       <div className="bg-surface border border-edge rounded-lg p-4 space-y-3">
         <div className="relative">
-          <MagnifyingGlass
+          <MagnifyingGlassIcon
             size={16}
             className="absolute left-3 top-1/2 -translate-y-1/2 text-fg-faint"
           />
           <input
             ref={inputRef}
             type="text"
-            autoFocus
             placeholder="Search stories..."
             value={filters.query}
             onChange={(e) => updateFilter({ query: e.target.value })}
@@ -149,7 +128,7 @@ export function SearchPanel({ onStoryClick, onUserClick, onBack }: Props) {
               onClick={() => updateFilter({ query: "" })}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-fg-faint hover:text-fg transition-colors"
             >
-              <X size={14} />
+              <XIcon size={14} />
             </button>
           )}
         </div>
@@ -157,7 +136,7 @@ export function SearchPanel({ onStoryClick, onUserClick, onBack }: Props) {
         {/* Date filters */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
           <div className="flex items-center gap-2 text-xs text-fg-muted">
-            <CalendarBlank size={14} />
+            <CalendarBlankIcon size={14} />
             <span>From</span>
           </div>
           <input
@@ -188,7 +167,7 @@ export function SearchPanel({ onStoryClick, onUserClick, onBack }: Props) {
       <div className="mt-4">
         {isFetching && !data && (
           <div className="flex items-center justify-center py-12 gap-2 text-fg-faint text-xs">
-            <Spinner size={14} className="animate-spin" />
+            <SpinnerIcon size={14} className="animate-spin" />
             Searching...
           </div>
         )}
@@ -208,7 +187,7 @@ export function SearchPanel({ onStoryClick, onUserClick, onBack }: Props) {
             <div className="flex items-center justify-between mb-2 px-1">
               <span className="text-[11px] text-fg-faint">
                 {data?.nbHits.toLocaleString()} results
-                {isFetching && <Spinner size={10} className="animate-spin inline ml-1.5" />}
+                {isFetching && <SpinnerIcon size={10} className="animate-spin inline ml-1.5" />}
               </span>
               {data && data.nbPages > 1 && (
                 <span className="text-[11px] text-fg-faint">
@@ -224,11 +203,19 @@ export function SearchPanel({ onStoryClick, onUserClick, onBack }: Props) {
                   <div
                     key={hit.objectID}
                     onClick={() => onStoryClick(Number(hit.objectID))}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        onStoryClick(Number(hit.objectID));
+                      }
+                    }}
                     className={`group flex gap-3 px-3 py-2.5 rounded-md cursor-pointer transition-all duration-150 ${
                       i === selectedIndex
                         ? "bg-accent-subtle ring-1 ring-accent/20"
                         : "hover:bg-surface-hover"
                     }`}
+                    role="button"
+                    tabIndex={0}
                   >
                     <div className="shrink-0 w-8 text-right">
                       <span
@@ -275,7 +262,7 @@ export function SearchPanel({ onStoryClick, onUserClick, onBack }: Props) {
                             onClick={(e) => e.stopPropagation()}
                             className="ml-auto opacity-0 group-hover:opacity-100 text-fg-faint hover:text-accent transition-all"
                           >
-                            <ArrowSquareOut size={11} />
+                            <ArrowSquareOutIcon size={11} />
                           </a>
                         )}
                       </div>
@@ -296,7 +283,7 @@ export function SearchPanel({ onStoryClick, onUserClick, onBack }: Props) {
                   disabled={filters.page === 0}
                   className="flex items-center gap-1 px-3 py-1.5 text-xs text-fg-muted hover:text-fg bg-surface hover:bg-surface-hover border border-edge rounded-md transition-colors disabled:opacity-30 disabled:pointer-events-none"
                 >
-                  <CaretLeft size={12} />
+                  <CaretLeftIcon size={12} />
                   Prev
                 </button>
                 <button
@@ -308,7 +295,7 @@ export function SearchPanel({ onStoryClick, onUserClick, onBack }: Props) {
                   className="flex items-center gap-1 px-3 py-1.5 text-xs text-accent hover:text-accent-hover bg-accent-subtle border border-accent/20 rounded-md transition-colors disabled:opacity-30 disabled:pointer-events-none"
                 >
                   Next
-                  <CaretRight size={12} />
+                  <CaretRightIcon size={12} />
                 </button>
               </div>
             )}

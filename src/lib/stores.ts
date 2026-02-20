@@ -1,10 +1,14 @@
 import { atom } from "nanostores";
+import { persistentJSON } from "@nanostores/persistent";
 import type { FeedType } from "./types";
 
-export const $activeStory = atom<{ feedType: FeedType; storyId: number } | null>(null);
+export const $activeStory = persistentJSON<{ feedType: FeedType; storyId: number } | null>(
+  "uhn:active-story",
+  null,
+);
 
 /** Persists pagination page per feed so it survives back navigation from story detail */
-export const $feedPage = atom<Partial<Record<FeedType, number>>>({});
+export const $feedPage = persistentJSON<Partial<Record<FeedType, number>>>("uhn:feed-page", {});
 
 const MAX_MAP_ENTRIES = 50;
 

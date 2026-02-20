@@ -1,4 +1,4 @@
-import { X } from "@phosphor-icons/react";
+import { XIcon } from "@phosphor-icons/react";
 import { useHotkeys } from "../lib/useHotkeys";
 
 interface Props {
@@ -36,14 +36,14 @@ export function KeyboardShortcuts({ isOpen, onClose }: Props) {
   return (
     <div
       className="fixed inset-0 z-50 animate-fade bg-bg/60 backdrop-blur-sm flex items-center justify-center p-4"
-      onClick={onClose}
+      onPointerDown={onClose}
     >
       <div
         className="bg-surface/95 border border-edge rounded-xl shadow-lg w-full max-w-md"
         role="dialog"
         aria-modal="true"
         aria-label="Keyboard shortcuts"
-        onClick={(event) => event.stopPropagation()}
+        onPointerDown={(event) => event.stopPropagation()}
       >
         <div className="flex items-center justify-between px-5 py-3 border-b border-edge/50">
           <span className="text-sm font-medium text-fg-muted">Keyboard Shortcuts</span>
@@ -52,7 +52,7 @@ export function KeyboardShortcuts({ isOpen, onClose }: Props) {
             className="text-fg-faint hover:text-fg transition-colors p-0.5"
             type="button"
           >
-            <X size={15} weight="bold" />
+            <XIcon size={15} weight="bold" />
           </button>
         </div>
         <div className="px-5 py-3">

@@ -1,0 +1,28 @@
+---
+import { UserIsland } from "../components/islands/UserIsland";
+import SiteLayout from "../layouts/SiteLayout.astro";
+
+export const prerender = false;
+
+const rawId = (Astro.url.searchParams.get("id") ?? "").trim();
+const decodedUserId = (() => {
+  try {
+    return decodeURIComponent(rawId);
+  } catch {
+    return rawId;
+  }
+})();
+const hasUserId = decodedUserId.length > 0;
+const title = hasUserId ? `${decodedUserId} | uhn` : "User | uhn";
+---
+
+<SiteLayout title={title}>
+  {
+    hasUserId ? (
+      <UserIsland client:only="react" userId={decodedUserId} />
+    ) : (
+      <div class="py-12 px-4 text-center text-sm text-fg-faint">Invalid user id.</div>
+    )
+  }
+</SiteLayout>
+

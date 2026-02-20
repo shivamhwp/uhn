@@ -1,77 +1,10 @@
 ---
-import '../styles/global.css';
-import { Font } from 'astro:assets';
-import App from '../components/App';
-
-const isProd = import.meta.env.PROD;
+import { FeedIsland } from "../components/islands/FeedIsland";
+import SiteLayout from "../layouts/SiteLayout.astro";
 ---
 
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>uhn</title>
-    <meta name="description" content="A beautiful, keyboard-driven Hacker News client" />
-
-    <!-- Favicon & PWA icons -->
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="apple-touch-icon" href="/favicon.svg" />
-
-    <!-- PWA manifest -->
-    <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#ff6600" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="UHN" />
-
-    <!-- Switzer from Fontshare via Astro Fonts API -->
-    <Font cssVariable="--font-switzer" preload />
-
-    <!-- OneDollarStats -->
-    <script is:inline src="https://assets.onedollarstats.com/stonks.js" data-hash-routing></script>
-
-    <script is:inline define:vars={{ isProd }}>
-      // Prevent theme flash
-      (function() {
-        var t = localStorage.getItem('hn-theme');
-        if (!t) t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-        if (t === 'dark') document.documentElement.classList.add('dark');
-      })();
-
-      // Register SW only in production. In development, remove any existing SW/caches
-      // so Vite HMR modules are never served from stale cache.
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function() {
-          if (isProd) {
-            navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' });
-            return;
-          }
-
-          navigator.serviceWorker.getRegistrations().then(function(registrations) {
-            registrations.forEach(function(registration) {
-              registration.unregister();
-            });
-          });
-
-          if ('caches' in window) {
-            caches.keys().then(function(keys) {
-              keys.forEach(function(key) {
-                caches.delete(key);
-              });
-            });
-          }
-        });
-      }
-    </script>
-  </head>
-  <body>
-    <App client:only="react">
-      <div class="min-h-screen flex items-center justify-center">
-        <div class="flex flex-col items-center gap-3">
-          <img src="/favicon.svg" alt="" class="w-10 h-10" />
-          <span class="text-fg-faint text-xs animate-pulse">loading...</span>
-        </div>
-      </div>
-    </App>
-  </body>
-</html>
+<SiteLayout activeFeed="top">
+  <section class="h-[calc(100dvh-4rem)] overflow-hidden">
+    <FeedIsland client:only="react" feedType="top" />
+  </section>
+</SiteLayout>

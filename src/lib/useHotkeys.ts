@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { getHotkeyManager } from "@tanstack/hotkeys";
+import type { Hotkey } from "@tanstack/hotkeys";
 
 /**
  * Registers hotkeys with TanStack Hotkeys. Handlers are kept fresh via ref
@@ -18,7 +19,7 @@ export function useHotkeys(
   const hotkeyList = Object.keys(handlers).sort().join(",");
   useEffect(() => {
     const manager = getHotkeyManager();
-    const hotkeys = Object.keys(handlersRef.current);
+    const hotkeys = Object.keys(handlersRef.current) as Array<Hotkey>;
     const registrationHandles = hotkeys.map((hotkey) =>
       manager.register(hotkey, (e) => handlersRef.current[hotkey]?.(e), {
         target: options?.target ?? document,

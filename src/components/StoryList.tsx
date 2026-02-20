@@ -1,13 +1,15 @@
 import { useState, useCallback, useRef } from "react";
+import { useEffect, useLayoutEffect } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useQueryClient } from "@tanstack/react-query";
 import { useStore } from "@nanostores/react";
 import { useStoryIds, useStoriesPage, usePrefetchItem, ITEMS_PER_PAGE } from "../lib/hooks";
+import { feedPath } from "../lib/feeds";
 import { useTheme } from "./ThemeProvider";
 import { $activeStory, $feedPage } from "../lib/stores";
 import { useHotkeys } from "../lib/useHotkeys";
-import { StoryItem, StoryItemSkeleton } from "./StoryItem";
-import { CaretLeft, CaretRight, Spinner } from "@phosphor-icons/react";
+import { StoryItem } from "./StoryItem";
+import { CaretLeftIcon, CaretRightIcon, SpinnerIcon } from "@phosphor-icons/react";
 import type { FeedType } from "../lib/types";
 
 interface Props {
@@ -17,6 +19,29 @@ interface Props {
   onSearch: () => void;
   onToggleShortcuts: () => void;
 }
+
+const feedScrollTop = new Map<FeedType, number>();
+const getFeedScrollStorageKey = (feedType: FeedType) => `uhn:feed-scroll:${feedType}`;
+
+const readSavedFeedScroll = (feedType: FeedType) => {
+  try {
+    const raw = sessionStorage.getItem(getFeedScrollStorageKey(feedType));
+    if (!raw) return null;
+    const parsed = Number.parseFloat(raw);
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
+  } catch {
+    return null;
+  }
+};
+
+const saveFeedScroll = (feedType: FeedType, top: number) => {
+  feedScrollTop.set(feedType, top);
+  try {
+    sessionStorage.setItem(getFeedScrollStorageKey(feedType), String(top));
+  } catch {
+    // Ignore storage write errors (private mode, quota, etc.).
+  }
+};
 
 export function StoryList({
   feedType,
@@ -38,6 +63,8 @@ export function StoryList({
   );
   const [selectedIndexState, setSelectedIndexState] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const hasRestoredScrollRef = useRef(false);
+  const hasRestoredStoryAnchorRef = useRef(false);
   const { toggle: toggleTheme } = useTheme();
   const queryClient = useQueryClient();
   const prefetchItem = usePrefetchItem();
@@ -73,6 +100,68 @@ export function StoryList({
     scrollPaddingEnd: 220,
   });
 
+  const persistCurrentFeedPosition = useCallback(() => {
+    saveFeedScroll(feedType, scrollRef.current?.scrollTop ?? 0);
+  }, [feedType]);
+
+  // Keep refs updated for pagehide (runs during unload when closure may be stale)
+  const feedTypeRef = useRef(feedType);
+  feedTypeRef.current = feedType;
+
+  useEffect(() => {
+    const scrollElement = scrollRef.current;
+    if (!scrollElement) return;
+
+    const persistScroll = () => {
+      saveFeedScroll(feedTypeRef.current, scrollElement.scrollTop);
+    };
+
+    scrollElement.addEventListener("scroll", persistScroll, { passive: true });
+
+    const onPageHide = () => {
+      persistScroll();
+    };
+    window.addEventListener("pagehide", onPageHide);
+
+    return () => {
+      persistScroll();
+      scrollElement.removeEventListener("scroll", persistScroll);
+      window.removeEventListener("pagehide", onPageHide);
+    };
+  });
+
+  useLayoutEffect(() => {
+    if (hasRestoredScrollRef.current || idsLoading || isLoading || isLoadingMore) return;
+    if (stories.length === 0) return;
+
+    const savedTop = feedScrollTop.get(feedType) ?? readSavedFeedScroll(feedType);
+    if (savedTop == null) return;
+
+    hasRestoredScrollRef.current = true;
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const restore = () => {
+      el.scrollTop = savedTop;
+    };
+    requestAnimationFrame(() => {
+      requestAnimationFrame(restore);
+    });
+  }, [feedType, idsLoading, isLoading, isLoadingMore, stories.length]);
+
+  useLayoutEffect(() => {
+    if (hasRestoredStoryAnchorRef.current || hasRestoredScrollRef.current) return;
+    if (idsLoading || isLoading || isLoadingMore) return;
+    if (restoredIndex < 0 || stories.length === 0) return;
+
+    hasRestoredStoryAnchorRef.current = true;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        virtualizer.scrollToIndex(restoredIndex, { align: "center", behavior: "auto" });
+      });
+    });
+  }, [idsLoading, isLoading, isLoadingMore, restoredIndex, stories.length, virtualizer]);
+
   useHotkeys({
     j: () => {
       const next = Math.min(selectedIndex + 1, stories.length - 1);
@@ -107,6 +196,7 @@ export function StoryList({
     Enter: () => {
       if (stories[selectedIndex]) {
         $activeStory.set({ feedType, storyId: stories[selectedIndex].id });
+        persistCurrentFeedPosition();
         onStoryClick(stories[selectedIndex].id);
       }
     },
@@ -114,10 +204,16 @@ export function StoryList({
       const story = stories[selectedIndex];
       if (story?.url) window.open(story.url, "_blank", "noopener,noreferrer");
     },
-    "/": () => onSearch(),
+    "/": () => {
+      persistCurrentFeedPosition();
+      onSearch();
+    },
     t: () => toggleTheme(),
     "?": () => onToggleShortcuts(),
-    r: () => queryClient.invalidateQueries({ queryKey: ["storyIds"] }),
+    r: () => {
+      queryClient.invalidateQueries({ queryKey: ["storyIds"] });
+      queryClient.invalidateQueries({ queryKey: ["item"] });
+    },
     "]": () => loadMore(),
     "[": () => {
       if (page > 0) {
@@ -126,22 +222,36 @@ export function StoryList({
         scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
       }
     },
-    "1": () => (window.location.hash = "top"),
-    "2": () => (window.location.hash = "new"),
-    "3": () => (window.location.hash = "best"),
-    "4": () => (window.location.hash = "ask"),
-    "5": () => (window.location.hash = "show"),
-    "6": () => (window.location.hash = "jobs"),
+    "1": () => {
+      persistCurrentFeedPosition();
+      window.location.assign(feedPath("top"));
+    },
+    "2": () => {
+      persistCurrentFeedPosition();
+      window.location.assign(feedPath("new"));
+    },
+    "3": () => {
+      persistCurrentFeedPosition();
+      window.location.assign(feedPath("best"));
+    },
+    "4": () => {
+      persistCurrentFeedPosition();
+      window.location.assign(feedPath("ask"));
+    },
+    "5": () => {
+      persistCurrentFeedPosition();
+      window.location.assign(feedPath("show"));
+    },
+    "6": () => {
+      persistCurrentFeedPosition();
+      window.location.assign(feedPath("jobs"));
+    },
   });
 
   if (idsLoading || isLoading) {
     return (
-      <div className="py-4">
-        <div className="space-y-0.5">
-          {Array.from({ length: 15 }, (_, i) => (
-            <StoryItemSkeleton key={i} rank={i + 1} />
-          ))}
-        </div>
+      <div className="flex items-center justify-center py-16">
+        <SpinnerIcon size={24} className="animate-spin text-fg-muted" />
       </div>
     );
   }
@@ -187,13 +297,17 @@ export function StoryList({
                   isSelected={i === selectedIndex}
                   onClick={() => {
                     $activeStory.set({ feedType, storyId: story.id });
+                    persistCurrentFeedPosition();
                     onStoryClick(story.id);
                   }}
                   onHover={() => {
                     setSelectedIndex(i);
                     $activeStory.set({ feedType, storyId: story.id });
                   }}
-                  onUserClick={onUserClick}
+                  onUserClick={(id) => {
+                    persistCurrentFeedPosition();
+                    onUserClick(id);
+                  }}
                   onPrefetch={() => prefetchItem(story.id)}
                 />
               </div>
@@ -210,6 +324,7 @@ export function StoryList({
         <div className="flex items-center gap-2">
           {page > 0 && (
             <button
+              type="button"
               onClick={() => {
                 setPage((p) => p - 1);
                 setSelectedIndex(0);
@@ -217,12 +332,13 @@ export function StoryList({
               }}
               className="flex items-center gap-1 px-3 py-1.5 text-xs text-fg-muted hover:text-fg bg-surface hover:bg-surface-hover border border-edge rounded-md transition-colors"
             >
-              <CaretLeft size={12} />
+              <CaretLeftIcon size={12} />
               Prev
             </button>
           )}
           {hasMore && (
             <button
+              type="button"
               onClick={() => {
                 loadMore();
                 setSelectedIndex(stories.length);
@@ -232,13 +348,13 @@ export function StoryList({
             >
               {isLoadingMore ? (
                 <>
-                  <Spinner size={12} className="animate-spin" />
+                  <SpinnerIcon size={12} className="animate-spin" />
                   Loading...
                 </>
               ) : (
                 <>
                   More
-                  <CaretRight size={12} />
+                  <CaretRightIcon size={12} />
                 </>
               )}
             </button>

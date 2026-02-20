@@ -1,0 +1,22 @@
+---
+import { StoryIsland } from "../components/islands/StoryIsland";
+import SiteLayout from "../layouts/SiteLayout.astro";
+
+export const prerender = false;
+
+const rawId = (Astro.url.searchParams.get("id") ?? "").trim();
+const storyId = Number.parseInt(rawId, 10);
+const hasValidId = Number.isInteger(storyId) && storyId > 0;
+const title = hasValidId ? `Story ${storyId} | uhn` : "Story | uhn";
+---
+
+<SiteLayout title={title}>
+  {
+    hasValidId ? (
+      <StoryIsland client:only="react" storyId={storyId} />
+    ) : (
+      <div class="py-12 px-4 text-center text-sm text-fg-faint">Invalid story id.</div>
+    )
+  }
+</SiteLayout>
+
