@@ -1,12 +1,15 @@
 import { useCallback } from "react";
 import { StoryDetail } from "../StoryDetail";
 import { ReactProviders } from "../providers/ReactProviders";
+import type { HNItem } from "../../lib/types";
 
 interface Props {
+  initialComments?: HNItem[];
+  initialStory?: HNItem | null;
   storyId: number;
 }
 
-export function StoryIsland({ storyId }: Props) {
+export function StoryIsland({ storyId, initialStory, initialComments = [] }: Props) {
   const goBack = useCallback(() => {
     if (window.history.length > 1) {
       window.history.back();
@@ -21,7 +24,15 @@ export function StoryIsland({ storyId }: Props) {
 
   return (
     <ReactProviders>
-      <StoryDetail storyId={storyId} onBack={goBack} onUserClick={goToUser} />
+      <div className="h-full overflow-y-auto overscroll-contain">
+        <StoryDetail
+          storyId={storyId}
+          initialStory={initialStory}
+          initialComments={initialComments}
+          onBack={goBack}
+          onUserClick={goToUser}
+        />
+      </div>
     </ReactProviders>
   );
 }

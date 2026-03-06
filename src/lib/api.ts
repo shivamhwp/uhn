@@ -34,6 +34,7 @@ export async function searchStories(params: {
   page?: number;
   dateFrom?: number;
   dateTo?: number;
+  sortBy?: "latest" | "popular";
 }): Promise<AlgoliaResponse> {
   const searchParams = new URLSearchParams({
     tags: "story",
@@ -52,7 +53,7 @@ export async function searchStories(params: {
     searchParams.set("numericFilters", numericFilters.join(","));
   }
 
-  const endpoint = params.query ? "search" : "search_by_date";
+  const endpoint = params.sortBy === "popular" ? "search" : "search_by_date";
   const res = await fetch(`${ALGOLIA_API}/${endpoint}?${searchParams}`);
   return res.json();
 }

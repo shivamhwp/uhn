@@ -29,6 +29,7 @@ export function SearchPanel({ onStoryClick, onUserClick, onBack }: Props) {
     dateFrom: "",
     dateTo: "",
     page: 0,
+    sortBy: "latest",
   });
   const [selectedIndex, setSelectedIndex] = useState(0);
 

@@ -10,6 +10,7 @@ import { useSearch } from "../lib/hooks";
 import { extractDomain, timeAgo } from "../lib/utils";
 import { $searchPage, setSearchPageEntry } from "../lib/stores";
 import { useHotkeys } from "../lib/useHotkeys";
+import type { SearchFilters } from "../lib/types";
 
 interface Props {
   query: string;
@@ -18,25 +19,27 @@ interface Props {
 }
 
 export function SearchResultsList({ query, onStoryClick, onUserClick }: Props) {
+  const [sortBy, setSortBy] = useState<SearchFilters["sortBy"]>("latest");
+  const searchPageKey = `${sortBy}:${query}`;
   const searchPages = useStore($searchPage);
-  const page = searchPages[query] ?? 0;
+  const page = searchPages[searchPageKey] ?? 0;
   const setPage = (action: number | ((p: number) => number)) => {
-    const currentPage = $searchPage.get()[query] ?? 0;
+    const currentPage = $searchPage.get()[searchPageKey] ?? 0;
     const next = typeof action === "function" ? action(currentPage) : action;
-    setSearchPageEntry(query, next);
+    setSearchPageEntry(searchPageKey, next);
   };
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const prevQueryRef = useRef<string | null>(null);
-  const { data, isFetching } = useSearch({ query, dateFrom: "", dateTo: "", page });
+  const prevSearchKeyRef = useRef<string | null>(null);
+  const { data, isFetching } = useSearch({ query, dateFrom: "", dateTo: "", page, sortBy });
   const hits = data?.hits ?? [];
 
   useEffect(() => {
-    if (prevQueryRef.current != null && prevQueryRef.current !== query) {
-      setSearchPageEntry(query, 0);
+    if (prevSearchKeyRef.current != null && prevSearchKeyRef.current !== searchPageKey) {
+      setSearchPageEntry(searchPageKey, 0);
     }
-    prevQueryRef.current = query;
+    prevSearchKeyRef.current = searchPageKey;
     setSelectedIndex(0);
-  }, [query]);
+  }, [searchPageKey]);
 
   useHotkeys({
     j: () => setSelectedIndex((i) => Math.min(i + 1, hits.length - 1)),
@@ -68,16 +71,34 @@ export function SearchResultsList({ query, onStoryClick, onUserClick }: Props) {
 
   return (
     <div className="py-3 animate-fade">
-      <div className="flex items-center justify-between mb-2 px-1">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-2 px-1">
         <span className="text-[11px] text-fg-faint">
           {data?.nbHits?.toLocaleString() ?? 0} results
           {isFetching && <SpinnerIcon size={10} className="animate-spin inline ml-1.5" />}
         </span>
-        {data && data.nbPages > 1 && (
-          <span className="text-[11px] text-fg-faint">
-            Page {data.page + 1} of {data.nbPages}
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 rounded-md border border-edge bg-surface p-0.5">
+            {(["latest", "popular"] as const).map((mode) => (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => setSortBy(mode)}
+                className={`rounded-sm px-2 py-1 text-[11px] transition-colors ${
+                  sortBy === mode
+                    ? "bg-accent-subtle text-accent"
+                    : "text-fg-faint hover:text-fg hover:bg-surface-hover"
+                }`}
+              >
+                {mode === "latest" ? "Latest" : "Popular"}
+              </button>
+            ))}
+          </div>
+          {data && data.nbPages > 1 && (
+            <span className="text-[11px] text-fg-faint">
+              Page {data.page + 1} of {data.nbPages}
+            </span>
+          )}
+        </div>
       </div>
 
       {hits.length === 0 && !isFetching && (

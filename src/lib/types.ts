@@ -31,6 +31,7 @@ export interface SearchFilters {
   dateFrom: string;
   dateTo: string;
   page: number;
+  sortBy: "latest" | "popular";
 }
 
 export interface AlgoliaHit {

@@ -48,14 +48,30 @@ const activeFeedLabel = activeFeed ? feedLabels[activeFeed] : "Feeds";
 
     <Font cssVariable="--font-switzer" preload />
 
-    <script is:inline src="https://assets.onedollarstats.com/stonks.js"></script>
-
     <script is:inline define:vars={{ isProd }}>
       (function() {
         var t = localStorage.getItem('hn-theme');
         if (!t) t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         document.documentElement.classList.toggle('dark', t === 'dark');
       })();
+
+      if (isProd) {
+        window.addEventListener('load', function() {
+          var loadAnalytics = function() {
+            var script = document.createElement('script');
+            script.src = 'https://assets.onedollarstats.com/stonks.js';
+            script.defer = true;
+            document.head.appendChild(script);
+          };
+
+          if ('requestIdleCallback' in window) {
+            window.requestIdleCallback(loadAnalytics, { timeout: 3000 });
+            return;
+          }
+
+          window.setTimeout(loadAnalytics, 1500);
+        }, { once: true });
+      }
 
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
@@ -82,143 +98,145 @@ const activeFeedLabel = activeFeed ? feedLabels[activeFeed] : "Feeds";
     </script>
   </head>
   <body>
-    <header class="fixed top-0 left-0 right-0 z-40 border-b border-edge bg-bg/80 backdrop-blur-md px-2.5">
-      <div class="w-full max-w-4xl mx-auto px-0.5 sm:px-4 h-14 md:h-15 flex items-center gap-2">
-        <div class="flex-1 min-w-0 flex items-center gap-2">
-          <div id="normal-nav-wrapper" class="flex-1 min-w-0 flex items-center">
-            <nav id="feed-nav" class="hidden md:flex items-center gap-1.5">
-            {
-              feedOrder.map((feedType) => (
-                <a
-                  href={feedPath(feedType)}
-                  class:list={[
-                    "h-9 px-3 rounded-md text-xs font-medium transition-colors whitespace-nowrap inline-flex items-center justify-center",
-                    {
-                      "bg-accent-subtle text-accent": activeFeed === feedType,
-                      "text-fg-muted hover:text-fg hover:bg-surface-hover": activeFeed !== feedType,
-                    },
-                  ]}
-                >
-                  {feedLabels[feedType]}
-                </a>
-              ))
-            }
-          </nav>
-
-          <div id="mobile-feed-dropdown" class="md:hidden relative flex w-full min-w-0">
-            <button
-              id="mobile-feed-trigger"
-              type="button"
-              class="h-10 w-full min-w-0 px-3 rounded-md border border-edge bg-surface text-sm text-fg inline-flex items-center justify-between gap-2 hover:bg-surface-hover transition-colors"
-              aria-haspopup="menu"
-              aria-expanded="false"
-              aria-controls="mobile-feed-menu"
-            >
-              <span id="mobile-feed-label" class="truncate text-left">{activeFeedLabel}</span>
-              <CaretDownIcon
-                id="mobile-feed-chevron"
-                size={14}
-                className="text-fg-faint transition-transform duration-200"
-              />
-            </button>
-
-            <div
-              id="mobile-feed-menu"
-              class="hidden absolute left-0 right-0 top-[calc(100%+0.45rem)] z-50 w-full min-w-0 rounded-md border border-edge bg-surface shadow-lg p-1 animate-entry"
-              role="menu"
-            >
+    <div class="box-border w-full max-w-4xl mx-auto h-dvh flex flex-col px-0.5 sm:px-4">
+      <header class="shrink-0 border-b border-edge bg-bg/80 backdrop-blur-md px-2.5">
+        <div class="h-14 md:h-15 flex items-center gap-2">
+          <div class="flex-1 min-w-0 flex items-center gap-2">
+            <div id="normal-nav-wrapper" class="flex-1 min-w-0 flex items-center">
+              <nav id="feed-nav" class="hidden md:flex items-center gap-1.5">
               {
-                feedOrder.map((feedType) => {
-                  const isActive = activeFeed === feedType;
-                  return (
-                    <a
-                      href={feedPath(feedType)}
-                      class:list={[
-                        "h-9 px-2.5 rounded-sm text-sm inline-flex w-full items-center justify-between transition-colors",
-                        {
-                          "bg-accent-subtle text-accent": isActive,
-                          "text-fg-muted hover:text-fg hover:bg-surface-hover": !isActive,
-                        },
-                      ]}
-                      role="menuitem"
-                    >
-                      <span>{feedLabels[feedType]}</span>
-                      {isActive && <CheckIcon size={14} weight="bold" />}
-                    </a>
-                  );
-                })
+                feedOrder.map((feedType) => (
+                  <a
+                    href={feedPath(feedType)}
+                    class:list={[
+                      "h-9 px-3 rounded-md text-xs font-medium transition-colors whitespace-nowrap inline-flex items-center justify-center",
+                      {
+                        "bg-accent-subtle text-accent": activeFeed === feedType,
+                        "text-fg-muted hover:text-fg hover:bg-surface-hover": activeFeed !== feedType,
+                      },
+                    ]}
+                  >
+                    {feedLabels[feedType]}
+                  </a>
+                ))
               }
+            </nav>
+
+            <div id="mobile-feed-dropdown" class="md:hidden relative flex w-full min-w-0">
+              <button
+                id="mobile-feed-trigger"
+                type="button"
+                class="h-10 w-full min-w-0 px-3 rounded-md border border-edge bg-surface text-sm text-fg inline-flex items-center justify-between gap-2 hover:bg-surface-hover transition-colors"
+                aria-haspopup="menu"
+                aria-expanded="false"
+                aria-controls="mobile-feed-menu"
+              >
+                <span id="mobile-feed-label" class="truncate text-left">{activeFeedLabel}</span>
+                <CaretDownIcon
+                  id="mobile-feed-chevron"
+                  size={14}
+                  className="text-fg-faint transition-transform duration-200"
+                />
+              </button>
+
+              <div
+                id="mobile-feed-menu"
+                class="hidden absolute left-0 right-0 top-[calc(100%+0.45rem)] z-50 w-full min-w-0 rounded-md border border-edge bg-surface shadow-lg p-1 animate-entry"
+                role="menu"
+              >
+                {
+                  feedOrder.map((feedType) => {
+                    const isActive = activeFeed === feedType;
+                    return (
+                      <a
+                        href={feedPath(feedType)}
+                        class:list={[
+                          "h-9 px-2.5 rounded-sm text-sm inline-flex w-full items-center justify-between transition-colors",
+                          {
+                            "bg-accent-subtle text-accent": isActive,
+                            "text-fg-muted hover:text-fg hover:bg-surface-hover": !isActive,
+                          },
+                        ]}
+                        role="menuitem"
+                      >
+                        <span>{feedLabels[feedType]}</span>
+                        {isActive && <CheckIcon size={14} weight="bold" />}
+                      </a>
+                    );
+                  })
+                }
+              </div>
             </div>
-          </div>
+            </div>
+
+            <form
+              id="header-search-form"
+              action="/search"
+              method="get"
+              class="hidden flex-1 min-w-0 items-center gap-2"
+            >
+              <div class="relative flex-1 min-w-0">
+                <MagnifyingGlassIcon
+                  size={16}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-fg-faint"
+                />
+                <input
+                  id="header-search-input"
+                  type="search"
+                  name="q"
+                  value={searchQuery}
+                  placeholder="Search stories..."
+                  class="w-full h-10 box-border pl-9 pr-3 rounded-md border border-edge bg-surface text-sm text-fg placeholder:text-fg-faint focus:outline-none focus:ring-1 focus:ring-accent/30 focus:border-accent/50"
+                />
+              </div>
+              <button
+                id="search-close"
+                type="button"
+                class="p-2 rounded-md text-fg-muted hover:text-fg hover:bg-surface-hover transition-colors"
+                title="Close search"
+              >
+                <XIcon size={16} weight="bold" />
+              </button>
+            </form>
           </div>
 
-          <form
-            id="header-search-form"
-            action="/search"
-            method="get"
-            class="hidden flex-1 min-w-0 items-center gap-2"
-          >
-            <div class="relative flex-1 min-w-0">
-              <MagnifyingGlassIcon
-                size={16}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-fg-faint"
-              />
-              <input
-                id="header-search-input"
-                type="search"
-                name="q"
-                value={searchQuery}
-                placeholder="Search stories..."
-                class="w-full h-10 box-border pl-9 pr-3 rounded-md border border-edge bg-surface text-sm text-fg placeholder:text-fg-faint focus:outline-none focus:ring-1 focus:ring-accent/30 focus:border-accent/50"
-              />
-            </div>
+          <div class="flex items-center gap-1">
             <button
-              id="search-close"
+              id="refresh-feed"
               type="button"
               class="p-2 rounded-md text-fg-muted hover:text-fg hover:bg-surface-hover transition-colors"
-              title="Close search"
+              title="Refresh feeds"
+              aria-busy="false"
             >
-              <XIcon size={16} />
+              <ArrowClockwiseIcon id="refresh-icon" size={16} />
             </button>
-          </form>
+            <button
+              id="search-toggle"
+              type="button"
+              class="p-2 rounded-md text-fg-muted hover:text-fg hover:bg-surface-hover transition-colors"
+              title="Search"
+              aria-expanded="false"
+              aria-controls="header-search-form"
+            >
+              <MagnifyingGlassIcon size={16} />
+            </button>
+            <button
+              id="theme-toggle"
+              type="button"
+              class="p-2 rounded-md text-fg-muted hover:text-fg hover:bg-surface-hover transition-colors"
+              title="Toggle theme"
+            >
+              <SunIcon id="theme-icon-sun" size={16} className="hidden" />
+              <MoonIcon id="theme-icon-moon" size={16} />
+            </button>
+          </div>
         </div>
+      </header>
 
-        <div class="flex items-center gap-1">
-          <button
-            id="refresh-feed"
-            type="button"
-            class="p-2 rounded-md text-fg-muted hover:text-fg hover:bg-surface-hover transition-colors"
-            title="Refresh feeds"
-            aria-busy="false"
-          >
-            <ArrowClockwiseIcon id="refresh-icon" size={16} />
-          </button>
-          <button
-            id="search-toggle"
-            type="button"
-            class="p-2 rounded-md text-fg-muted hover:text-fg hover:bg-surface-hover transition-colors"
-            title="Search"
-            aria-expanded="false"
-            aria-controls="header-search-form"
-          >
-            <MagnifyingGlassIcon size={16} />
-          </button>
-          <button
-            id="theme-toggle"
-            type="button"
-            class="p-2 rounded-md text-fg-muted hover:text-fg hover:bg-surface-hover transition-colors"
-            title="Toggle theme"
-          >
-            <SunIcon id="theme-icon-sun" size={16} className="hidden" />
-            <MoonIcon id="theme-icon-moon" size={16} />
-          </button>
-        </div>
-      </div>
-    </header>
-
-    <main class="w-full max-w-4xl mx-auto h-full px-0.5 sm:px-4 pt-16 pb-4 sm:pb-12">
-      <slot />
-    </main>
+      <main class="min-h-0 flex flex-1 flex-col overflow-hidden pb-4 sm:pb-12">
+        <slot />
+      </main>
+    </div>
 
     <div class="fixed bottom-0 right-4 h-7 hidden sm:flex items-center text-lg text-fg-faint/50 z-40">
       made by
@@ -253,7 +271,6 @@ const activeFeedLabel = activeFeed ? feedLabels[activeFeed] : "Feeds";
         var searchForm = document.getElementById('header-search-form');
         var searchInput = document.getElementById('header-search-input');
         var normalNavWrapper = document.getElementById('normal-nav-wrapper');
-        var feedNav = document.getElementById('feed-nav');
         var mobileFeedDropdown = document.getElementById('mobile-feed-dropdown');
         var mobileFeedTrigger = document.getElementById('mobile-feed-trigger');
         var mobileFeedMenu = document.getElementById('mobile-feed-menu');

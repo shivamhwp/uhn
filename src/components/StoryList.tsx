@@ -9,7 +9,7 @@ import { useTheme } from "./ThemeProvider";
 import { $activeStory, $feedPage } from "../lib/stores";
 import { useHotkeys } from "../lib/useHotkeys";
 import { StoryItem } from "./StoryItem";
-import { CaretLeftIcon, CaretRightIcon, SpinnerIcon } from "@phosphor-icons/react";
+import { CaretLeftIcon, SpinnerIcon } from "@phosphor-icons/react";
 import type { FeedType } from "../lib/types";
 
 interface Props {
@@ -65,6 +65,7 @@ export function StoryList({
   const scrollRef = useRef<HTMLDivElement>(null);
   const hasRestoredScrollRef = useRef(false);
   const hasRestoredStoryAnchorRef = useRef(false);
+  const autoLoadPendingRef = useRef(false);
   const { toggle: toggleTheme } = useTheme();
   const queryClient = useQueryClient();
   const prefetchItem = usePrefetchItem();
@@ -128,7 +129,13 @@ export function StoryList({
       scrollElement.removeEventListener("scroll", persistScroll);
       window.removeEventListener("pagehide", onPageHide);
     };
-  });
+  }, []);
+
+  useEffect(() => {
+    if (!isLoadingMore) {
+      autoLoadPendingRef.current = false;
+    }
+  }, [isLoadingMore]);
 
   useLayoutEffect(() => {
     if (hasRestoredScrollRef.current || idsLoading || isLoading || isLoadingMore) return;
@@ -248,6 +255,17 @@ export function StoryList({
     },
   });
 
+  const virtualItems = virtualizer.getVirtualItems();
+  const lastVisibleIndex = virtualItems.at(-1)?.index ?? -1;
+
+  useEffect(() => {
+    if (!hasMore || isLoadingMore || autoLoadPendingRef.current) return;
+    if (lastVisibleIndex < stories.length - 5) return;
+
+    autoLoadPendingRef.current = true;
+    loadMore();
+  }, [hasMore, isLoadingMore, lastVisibleIndex, loadMore, stories.length]);
+
   if (idsLoading || isLoading) {
     return (
       <div className="flex items-center justify-center py-16">
@@ -255,8 +273,6 @@ export function StoryList({
       </div>
     );
   }
-
-  const virtualItems = virtualizer.getVirtualItems();
 
   return (
     <div ref={scrollRef} className="h-full overflow-y-auto overscroll-contain py-3">
@@ -336,28 +352,11 @@ export function StoryList({
               Prev
             </button>
           )}
-          {hasMore && (
-            <button
-              type="button"
-              onClick={() => {
-                loadMore();
-                setSelectedIndex(stories.length);
-              }}
-              disabled={isLoadingMore}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-accent hover:text-accent-hover bg-accent-subtle hover:bg-accent/10 border border-accent/20 rounded-md transition-colors disabled:opacity-50"
-            >
-              {isLoadingMore ? (
-                <>
-                  <SpinnerIcon size={12} className="animate-spin" />
-                  Loading...
-                </>
-              ) : (
-                <>
-                  More
-                  <CaretRightIcon size={12} />
-                </>
-              )}
-            </button>
+          {isLoadingMore && (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-fg-faint">
+              <SpinnerIcon size={12} className="animate-spin" />
+              Loading more...
+            </div>
           )}
         </div>
       </div>

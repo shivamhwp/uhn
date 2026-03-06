@@ -8,19 +8,28 @@ import {
   SpinnerIcon,
 } from "@phosphor-icons/react";
 import { useItem } from "../lib/hooks";
+import type { HNItem } from "../lib/types";
 import { useTheme } from "./ThemeProvider";
 import { timeAgo, extractDomain, formatDate } from "../lib/utils";
 import { useHotkeys } from "../lib/useHotkeys";
 import { CommentTree } from "./CommentTree";
 
 interface Props {
+  initialComments?: HNItem[];
+  initialStory?: HNItem | null;
   storyId: number;
   onBack: () => void;
   onUserClick: (id: string) => void;
 }
 
-export function StoryDetail({ storyId, onBack, onUserClick }: Props) {
-  const { data: story, isLoading } = useItem(storyId);
+export function StoryDetail({
+  storyId,
+  initialStory,
+  initialComments = [],
+  onBack,
+  onUserClick,
+}: Props) {
+  const { data: story, isLoading } = useItem(storyId, initialStory);
   const { toggle: toggleTheme } = useTheme();
   const domain = extractDomain(story?.url);
 
@@ -126,7 +135,11 @@ export function StoryDetail({ storyId, onBack, onUserClick }: Props) {
         <h2 className="text-xs font-semibold text-fg-muted uppercase tracking-wider mb-4">
           Comments
         </h2>
-        <CommentTree commentIds={story.kids ?? []} onUserClick={onUserClick} />
+        <CommentTree
+          commentIds={story.kids ?? []}
+          initialComments={initialComments}
+          onUserClick={onUserClick}
+        />
       </div>
     </div>
   );

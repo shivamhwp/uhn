@@ -16,12 +16,14 @@ export function UserIsland({ userId }: Props) {
   }, []);
 
   const goToStory = useCallback((id: number) => {
-    window.location.assign(`/story?id=${id}`);
+    window.location.assign(`/item?id=${id}`);
   }, []);
 
   return (
     <ReactProviders>
-      <UserProfile userId={userId} onBack={goBack} onStoryClick={goToStory} />
+      <div className="h-full overflow-y-auto overscroll-contain">
+        <UserProfile userId={userId} onBack={goBack} onStoryClick={goToStory} />
+      </div>
     </ReactProviders>
   );
 }

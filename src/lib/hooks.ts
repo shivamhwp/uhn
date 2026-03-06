@@ -3,14 +3,18 @@ import { fetchItem, fetchUser, fetchStoryIds, searchStories } from "./api";
 import type { FeedType, HNItem, SearchFilters } from "./types";
 
 export const ITEMS_PER_PAGE = 30;
-const STALE_FOREVER = Infinity;
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+const FEED_STALE_MS = 30 * 1000;
+const ITEM_STALE_MS = 5 * 60 * 1000;
+const USER_STALE_MS = 15 * 60 * 1000;
+const SEARCH_STALE_MS = 2 * 60 * 1000;
 
 export function useStoryIds(feedType: FeedType) {
   return useQuery({
     queryKey: ["storyIds", feedType],
     queryFn: () => fetchStoryIds(feedType),
-    staleTime: STALE_FOREVER,
-    gcTime: Infinity,
+    staleTime: FEED_STALE_MS,
+    gcTime: ONE_DAY_MS,
   });
 }
 
@@ -23,8 +27,8 @@ export function useStoriesPage(ids: number[] | undefined, page: number) {
     queries: pageIds.map((id) => ({
       queryKey: ["item", id] as const,
       queryFn: () => fetchItem(id),
-      staleTime: STALE_FOREVER,
-      gcTime: Infinity,
+      staleTime: ITEM_STALE_MS,
+      gcTime: ONE_DAY_MS,
     })),
   });
 
@@ -38,23 +42,26 @@ export function useStoriesPage(ids: number[] | undefined, page: number) {
   };
 }
 
-export function useItem(id: number | null) {
+export function useItem(id: number | null, initialData?: HNItem | null) {
   return useQuery({
     queryKey: ["item", id],
     queryFn: () => fetchItem(id!),
     enabled: id != null,
-    staleTime: STALE_FOREVER,
-    gcTime: Infinity,
+    staleTime: ITEM_STALE_MS,
+    gcTime: ONE_DAY_MS,
+    initialData,
   });
 }
 
-export function useComments(ids: number[] | undefined) {
+export function useComments(ids: number[] | undefined, initialComments: HNItem[] = []) {
+  const initialCommentMap = new Map(initialComments.map((comment) => [comment.id, comment]));
   const queries = useQueries({
     queries: (ids ?? []).map((id) => ({
       queryKey: ["item", id] as const,
       queryFn: () => fetchItem(id),
-      staleTime: STALE_FOREVER,
-      gcTime: Infinity,
+      staleTime: ITEM_STALE_MS,
+      gcTime: ONE_DAY_MS,
+      initialData: initialCommentMap.get(id),
     })),
   });
 
@@ -69,8 +76,8 @@ export function useUser(id: string | null) {
     queryKey: ["user", id],
     queryFn: () => fetchUser(id!),
     enabled: id != null,
-    staleTime: STALE_FOREVER,
-    gcTime: Infinity,
+    staleTime: USER_STALE_MS,
+    gcTime: ONE_DAY_MS,
   });
 }
 
@@ -82,6 +89,7 @@ export function useSearch(filters: SearchFilters) {
       searchStories({
         query: filters.query,
         page: filters.page,
+        sortBy: filters.sortBy,
         dateFrom: filters.dateFrom
           ? Math.floor(new Date(filters.dateFrom).getTime() / 1000)
           : undefined,
@@ -90,8 +98,8 @@ export function useSearch(filters: SearchFilters) {
           : undefined,
       }),
     enabled: hasQuery,
-    staleTime: STALE_FOREVER,
-    gcTime: Infinity,
+    staleTime: SEARCH_STALE_MS,
+    gcTime: ONE_DAY_MS,
     placeholderData: (prev) => prev,
   });
 }
@@ -102,7 +110,7 @@ export function usePrefetchItem() {
     qc.prefetchQuery({
       queryKey: ["item", id],
       queryFn: () => fetchItem(id),
-      staleTime: Infinity,
+      staleTime: ITEM_STALE_MS,
     });
   };
 }

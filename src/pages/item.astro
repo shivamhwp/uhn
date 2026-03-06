@@ -16,7 +16,7 @@ const initialComments = story?.kids?.length
       )
     ).filter((comment) => comment != null)
   : [];
-const title = story?.title ? `${story.title} | uhn` : hasValidId ? `Story ${storyId} | uhn` : "Story | uhn";
+const title = story?.title ? `${story.title} | uhn` : hasValidId ? `Item ${storyId} | uhn` : "Item | uhn";
 
 if (hasValidId) {
   Astro.response.headers.set(
@@ -38,7 +38,7 @@ if (hasValidId) {
         />
       </section>
     ) : (
-      <div class="py-12 px-4 text-center text-sm text-fg-faint">Invalid story id.</div>
+      <div class="py-12 px-4 text-center text-sm text-fg-faint">Invalid item id.</div>
     )
   }
 </SiteLayout>

@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { CaretDownIcon, CaretRightIcon, UserIcon, SpinnerIcon } from "@phosphor-icons/react";
-import { useItem } from "../lib/hooks";
+import { useComments, useItem } from "../lib/hooks";
+import type { HNItem } from "../lib/types";
 import { timeAgo } from "../lib/utils";
+
+const INITIAL_TOP_LEVEL_COMMENTS = 20;
+const COMMENT_PAGE_SIZE = 20;
 
 const DEPTH_COLORS = [
   "var(--color-accent)",
@@ -21,19 +25,9 @@ interface CommentProps {
 }
 
 function Comment({ commentId, depth, onUserClick }: CommentProps) {
-  const { data: comment, isLoading } = useItem(commentId);
+  const { data: comment } = useItem(commentId);
   const [collapsed, setCollapsed] = useState(false);
-
-  if (isLoading) {
-    return (
-      <div
-        style={{ paddingLeft: depth > 0 ? "var(--comment-indent)" : undefined }}
-        className="flex items-center py-2"
-      >
-        <SpinnerIcon size={14} className="animate-spin text-fg-muted" />
-      </div>
-    );
-  }
+  const [showReplies, setShowReplies] = useState(false);
 
   if (!comment || comment.deleted || comment.dead) {
     return null;
@@ -41,6 +35,9 @@ function Comment({ commentId, depth, onUserClick }: CommentProps) {
 
   const color = DEPTH_COLORS[depth % DEPTH_COLORS.length];
   const hasKids = comment.kids && comment.kids.length > 0;
+  const replyCountLabel = hasKids
+    ? `${comment.kids!.length} ${comment.kids!.length === 1 ? "reply" : "replies"}`
+    : "";
 
   return (
     <div style={{ paddingLeft: depth > 0 ? "var(--comment-indent)" : undefined }}>
@@ -68,11 +65,7 @@ function Comment({ commentId, depth, onUserClick }: CommentProps) {
             {comment.by}
           </button>
           <span className="text-fg-faint">{timeAgo(comment.time)}</span>
-          {collapsed && hasKids && (
-            <span className="text-fg-faint">
-              [{comment.kids!.length} {comment.kids!.length === 1 ? "reply" : "replies"}]
-            </span>
-          )}
+          {collapsed && hasKids && <span className="text-fg-faint">[{replyCountLabel}]</span>}
         </div>
 
         {/* Comment body */}
@@ -83,6 +76,17 @@ function Comment({ commentId, depth, onUserClick }: CommentProps) {
               dangerouslySetInnerHTML={{ __html: comment.text || "" }}
             />
             {hasKids && (
+              <div className="mt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowReplies((visible) => !visible)}
+                  className="text-xs text-fg-muted hover:text-accent transition-colors"
+                >
+                  {showReplies ? `Hide ${replyCountLabel}` : `Show ${replyCountLabel}`}
+                </button>
+              </div>
+            )}
+            {hasKids && showReplies && (
               <div className="mt-1">
                 {comment.kids!.map((kidId) => (
                   <Comment
@@ -103,19 +107,55 @@ function Comment({ commentId, depth, onUserClick }: CommentProps) {
 
 interface CommentTreeProps {
   commentIds: number[];
+  initialComments?: HNItem[];
   onUserClick: (id: string) => void;
 }
 
-export function CommentTree({ commentIds, onUserClick }: CommentTreeProps) {
+export function CommentTree({ commentIds, initialComments = [], onUserClick }: CommentTreeProps) {
+  const [visibleCount, setVisibleCount] = useState(INITIAL_TOP_LEVEL_COMMENTS);
+  const visibleCommentIds = commentIds.slice(0, visibleCount);
+  const hasMoreTopLevel = visibleCount < commentIds.length;
+  const nextCommentBatchSize = Math.min(
+    COMMENT_PAGE_SIZE,
+    commentIds.length - visibleCommentIds.length,
+  );
+  const { comments, isLoading } = useComments(visibleCommentIds, initialComments);
+  const visibleTopLevelComments = comments.filter((comment) => !comment.deleted && !comment.dead);
+
   if (commentIds.length === 0) {
+    return <div className="text-center py-12 text-fg-faint text-xs">No comments yet.</div>;
+  }
+
+  if (visibleTopLevelComments.length === 0 && !hasMoreTopLevel) {
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center gap-2 py-8 text-xs text-fg-faint">
+          <SpinnerIcon size={14} className="animate-spin" />
+          Loading comments...
+        </div>
+      );
+    }
+
     return <div className="text-center py-12 text-fg-faint text-xs">No comments yet.</div>;
   }
 
   return (
     <div className="space-y-0.5">
-      {commentIds.map((id) => (
+      {visibleCommentIds.map((id) => (
         <Comment key={id} commentId={id} depth={0} onUserClick={onUserClick} />
       ))}
+      {hasMoreTopLevel && (
+        <div className="pt-3">
+          <button
+            type="button"
+            onClick={() => setVisibleCount((count) => count + COMMENT_PAGE_SIZE)}
+            className="text-xs text-accent hover:text-accent-hover transition-colors"
+          >
+            Load {nextCommentBatchSize} more comments (
+            {commentIds.length - visibleCommentIds.length} remaining)
+          </button>
+        </div>
+      )}
     </div>
   );
 }

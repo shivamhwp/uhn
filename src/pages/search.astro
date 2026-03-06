@@ -9,5 +9,7 @@ const title = searchQuery ? `Search: ${searchQuery} | uhn` : "Search | uhn";
 ---
 
 <SiteLayout title={title} searchQuery={searchQuery}>
-  <SearchIsland client:only="react" initialQuery={searchQuery} />
+  <section class="min-h-0 flex-1 overflow-hidden">
+    <SearchIsland client:only="react" initialQuery={searchQuery} />
+  </section>
 </SiteLayout>

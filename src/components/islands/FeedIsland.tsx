@@ -13,7 +13,7 @@ export function FeedIsland({ feedType }: Props) {
   const [showShortcuts, setShowShortcuts] = useState(false);
 
   const goToStory = useCallback((id: number) => {
-    window.location.assign(`/story?id=${id}`);
+    window.location.assign(`/item?id=${id}`);
   }, []);
 
   const goToUser = useCallback((id: string) => {

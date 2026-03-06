@@ -19,10 +19,11 @@ const title = hasUserId ? `${decodedUserId} | uhn` : "User | uhn";
 <SiteLayout title={title}>
   {
     hasUserId ? (
-      <UserIsland client:only="react" userId={decodedUserId} />
+      <section class="min-h-0 flex-1 overflow-hidden">
+        <UserIsland client:only="react" userId={decodedUserId} />
+      </section>
     ) : (
       <div class="py-12 px-4 text-center text-sm text-fg-faint">Invalid user id.</div>
     )
   }
 </SiteLayout>
-
