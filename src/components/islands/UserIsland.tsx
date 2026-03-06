@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useLayoutEffect, useRef } from "react";
 import { UserProfile } from "../UserProfile";
 import { ReactProviders } from "../providers/ReactProviders";
 
@@ -7,6 +7,8 @@ interface Props {
 }
 
 export function UserIsland({ userId }: Props) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
   const goBack = useCallback(() => {
     if (window.history.length > 1) {
       window.history.back();
@@ -19,9 +21,13 @@ export function UserIsland({ userId }: Props) {
     window.location.assign(`/item?id=${id}`);
   }, []);
 
+  useLayoutEffect(() => {
+    scrollRef.current?.scrollTo({ top: 0, behavior: "auto" });
+  }, [userId]);
+
   return (
     <ReactProviders>
-      <div className="h-full overflow-y-auto overscroll-contain">
+      <div ref={scrollRef} className="h-full overflow-y-auto overscroll-contain">
         <UserProfile userId={userId} onBack={goBack} onStoryClick={goToStory} />
       </div>
     </ReactProviders>

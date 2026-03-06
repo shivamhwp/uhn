@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useLayoutEffect, useRef } from "react";
 import { StoryDetail } from "../StoryDetail";
 import { ReactProviders } from "../providers/ReactProviders";
 import type { HNItem } from "../../lib/types";
@@ -10,6 +10,8 @@ interface Props {
 }
 
 export function StoryIsland({ storyId, initialStory, initialComments = [] }: Props) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
   const goBack = useCallback(() => {
     if (window.history.length > 1) {
       window.history.back();
@@ -22,9 +24,13 @@ export function StoryIsland({ storyId, initialStory, initialComments = [] }: Pro
     window.location.assign(`/user?id=${encodeURIComponent(id)}`);
   }, []);
 
+  useLayoutEffect(() => {
+    scrollRef.current?.scrollTo({ top: 0, behavior: "auto" });
+  }, [storyId]);
+
   return (
     <ReactProviders>
-      <div className="h-full overflow-y-auto overscroll-contain">
+      <div ref={scrollRef} className="h-full overflow-y-auto overscroll-contain">
         <StoryDetail
           storyId={storyId}
           initialStory={initialStory}
