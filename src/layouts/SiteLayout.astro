@@ -46,7 +46,7 @@ const activeFeedLabel = activeFeed ? feedLabels[activeFeed] : "Feeds";
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="UHN" />
 
-    <Font cssVariable="--font-switzer" preload />
+    <Font cssVariable="--font-geist" preload />
 
     <script is:inline define:vars={{ isProd }}>
       (function() {
@@ -111,7 +111,7 @@ const activeFeedLabel = activeFeed ? feedLabels[activeFeed] : "Feeds";
                     class:list={[
                       "h-9 px-3 rounded-md text-xs font-medium transition-colors whitespace-nowrap inline-flex items-center justify-center",
                       {
-                        "bg-accent-subtle text-accent": activeFeed === feedType,
+                        "bg-accent-subtle text-accent border border-accent/30": activeFeed === feedType,
                         "text-fg-muted hover:text-fg hover:bg-surface-hover": activeFeed !== feedType,
                       },
                     ]}

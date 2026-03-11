@@ -3,7 +3,7 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --font-sans: var(--font-switzer), system-ui, sans-serif;
+  --font-sans: var(--font-geist), system-ui, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, "Cascadia Code", monospace;
 
   --color-bg: #f8f8f6;

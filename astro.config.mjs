@@ -11,11 +11,11 @@ export default defineConfig({
   experimental: {
     fonts: [
       {
-        provider: fontProviders.fontshare(),
-        name: "Switzer",
-        cssVariable: "--font-switzer",
+        provider: fontProviders.google(),
+        name: "Geist",
+        cssVariable: "--font-geist",
         weights: [300, 400, 500, 600, 700],
-        styles: ["normal", "italic"],
+        styles: ["normal"],
         fallbacks: ["system-ui", "sans-serif"],
       },
     ],
