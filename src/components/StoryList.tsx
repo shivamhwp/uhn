@@ -95,6 +95,7 @@ export function StoryList({
   const virtualizer = useVirtualizer({
     count: stories.length,
     getScrollElement: () => scrollRef.current,
+    getItemKey: (index) => stories[index]?.id ?? index,
     estimateSize: () => 84,
     overscan: 5,
     scrollPaddingStart: 80,
@@ -168,6 +169,16 @@ export function StoryList({
       });
     });
   }, [idsLoading, isLoading, isLoadingMore, restoredIndex, stories.length, virtualizer]);
+
+  useLayoutEffect(() => {
+    if (stories.length === 0) return;
+
+    const frame = requestAnimationFrame(() => {
+      virtualizer.measure();
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [stories.length, virtualizer]);
 
   useHotkeys({
     j: () => {
