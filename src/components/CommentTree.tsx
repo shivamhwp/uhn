@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import { CaretDownIcon, CaretRightIcon, UserIcon, SpinnerIcon } from "@phosphor-icons/react";
 import { useComments, useItem } from "../lib/hooks";
 import type { HNItem } from "../lib/types";
@@ -40,14 +40,15 @@ function Comment({ commentId, depth, onUserClick }: CommentProps) {
     : "";
 
   return (
-    <div style={{ paddingLeft: depth > 0 ? "var(--comment-indent)" : undefined }}>
+    <div className="comment-thread min-w-0" style={{ "--comment-depth": depth } as CSSProperties}>
       <div
-        className="border-l-2 pl-3 py-1.5 transition-colors overflow-hidden"
+        className="min-w-0 overflow-hidden border-l-2 py-1.5 pl-3 transition-colors"
         style={{ borderColor: collapsed ? "var(--color-edge)" : color }}
       >
         {/* Comment header */}
-        <div className="flex items-center gap-2 text-sm">
+        <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-base">
           <button
+            type="button"
             onClick={() => setCollapsed(!collapsed)}
             className="text-fg-faint hover:text-fg transition-colors shrink-0"
           >
@@ -58,11 +59,12 @@ function Comment({ commentId, depth, onUserClick }: CommentProps) {
             )}
           </button>
           <button
+            type="button"
             onClick={() => comment.by && onUserClick(comment.by)}
-            className="font-medium text-fg-muted hover:text-accent transition-colors flex items-center gap-1"
+            className="flex min-w-0 max-w-full items-center gap-1 font-medium text-fg-muted transition-colors hover:text-accent"
           >
             <UserIcon size={10} />
-            {comment.by}
+            <span className="min-w-0 break-all">{comment.by}</span>
           </button>
           <span className="text-fg-faint">{timeAgo(comment.time)}</span>
           {collapsed && hasKids && <span className="text-fg-faint">[{replyCountLabel}]</span>}
@@ -72,7 +74,7 @@ function Comment({ commentId, depth, onUserClick }: CommentProps) {
         {!collapsed && (
           <>
             <div
-              className="comment-html text-base text-fg leading-relaxed mt-1"
+              className="comment-html mt-1 min-w-0 text-lg leading-relaxed text-fg"
               dangerouslySetInnerHTML={{ __html: comment.text || "" }}
             />
             {hasKids && (
@@ -80,7 +82,7 @@ function Comment({ commentId, depth, onUserClick }: CommentProps) {
                 <button
                   type="button"
                   onClick={() => setShowReplies((visible) => !visible)}
-                  className="text-xs text-fg-muted hover:text-accent transition-colors"
+                  className="text-sm text-fg-muted transition-colors hover:text-accent"
                 >
                   {showReplies ? `Hide ${replyCountLabel}` : `Show ${replyCountLabel}`}
                 </button>
@@ -123,20 +125,20 @@ export function CommentTree({ commentIds, initialComments = [], onUserClick }: C
   const visibleTopLevelComments = comments.filter((comment) => !comment.deleted && !comment.dead);
 
   if (commentIds.length === 0) {
-    return <div className="text-center py-12 text-fg-faint text-xs">No comments yet.</div>;
+    return <div className="py-12 text-center text-sm text-fg-faint">No comments yet.</div>;
   }
 
   if (visibleTopLevelComments.length === 0 && !hasMoreTopLevel) {
     if (isLoading) {
       return (
-        <div className="flex items-center justify-center gap-2 py-8 text-xs text-fg-faint">
+        <div className="flex items-center justify-center gap-2 py-8 text-sm text-fg-faint">
           <SpinnerIcon size={14} className="animate-spin" />
           Loading comments...
         </div>
       );
     }
 
-    return <div className="text-center py-12 text-fg-faint text-xs">No comments yet.</div>;
+    return <div className="py-12 text-center text-sm text-fg-faint">No comments yet.</div>;
   }
 
   return (
@@ -149,7 +151,7 @@ export function CommentTree({ commentIds, initialComments = [], onUserClick }: C
           <button
             type="button"
             onClick={() => setVisibleCount((count) => count + COMMENT_PAGE_SIZE)}
-            className="text-xs text-accent hover:text-accent-hover transition-colors"
+            className="text-sm text-accent transition-colors hover:text-accent-hover"
           >
             Load {nextCommentBatchSize} more comments (
             {commentIds.length - visibleCommentIds.length} remaining)

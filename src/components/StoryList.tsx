@@ -20,6 +20,8 @@ interface Props {
   onToggleShortcuts: () => void;
 }
 
+const STORY_ROW_HEIGHT = 88;
+
 const feedScrollTop = new Map<FeedType, number>();
 const getFeedScrollStorageKey = (feedType: FeedType) => `uhn:feed-scroll:${feedType}`;
 
@@ -66,6 +68,14 @@ export function StoryList({
   const hasRestoredScrollRef = useRef(false);
   const hasRestoredStoryAnchorRef = useRef(false);
   const autoLoadPendingRef = useRef(false);
+  const prevFeedTypeRef = useRef(feedType);
+
+  // Reset restoration flags when feed changes so scroll is re-applied per feed
+  if (prevFeedTypeRef.current !== feedType) {
+    prevFeedTypeRef.current = feedType;
+    hasRestoredScrollRef.current = false;
+    hasRestoredStoryAnchorRef.current = false;
+  }
   const { toggle: toggleTheme } = useTheme();
   const queryClient = useQueryClient();
   const prefetchItem = usePrefetchItem();
@@ -96,7 +106,7 @@ export function StoryList({
     count: stories.length,
     getScrollElement: () => scrollRef.current,
     getItemKey: (index) => stories[index]?.id ?? index,
-    estimateSize: () => 84,
+    estimateSize: () => STORY_ROW_HEIGHT,
     overscan: 5,
     scrollPaddingStart: 80,
     scrollPaddingEnd: 220,
@@ -170,16 +180,6 @@ export function StoryList({
     });
   }, [idsLoading, isLoading, isLoadingMore, restoredIndex, stories.length, virtualizer]);
 
-  useLayoutEffect(() => {
-    if (stories.length === 0) return;
-
-    const frame = requestAnimationFrame(() => {
-      virtualizer.measure();
-    });
-
-    return () => cancelAnimationFrame(frame);
-  }, [stories.length, virtualizer]);
-
   useHotkeys({
     j: () => {
       const next = Math.min(selectedIndex + 1, stories.length - 1);
@@ -187,7 +187,7 @@ export function StoryList({
       setSelectedIndex(next);
       const nextStory = stories[next];
       if (nextStory) $activeStory.set({ feedType, storyId: nextStory.id });
-      virtualizer.scrollToIndex(next, { align: "auto", behavior: "smooth" });
+      virtualizer.scrollToIndex(next, { align: "auto", behavior: "auto" });
     },
     ArrowDown: () => {
       const next = Math.min(selectedIndex + 1, stories.length - 1);
@@ -195,21 +195,21 @@ export function StoryList({
       setSelectedIndex(next);
       const nextStory = stories[next];
       if (nextStory) $activeStory.set({ feedType, storyId: nextStory.id });
-      virtualizer.scrollToIndex(next, { align: "auto", behavior: "smooth" });
+      virtualizer.scrollToIndex(next, { align: "auto", behavior: "auto" });
     },
     k: () => {
       const prev = Math.max(selectedIndex - 1, 0);
       setSelectedIndex(prev);
       const prevStory = stories[prev];
       if (prevStory) $activeStory.set({ feedType, storyId: prevStory.id });
-      virtualizer.scrollToIndex(prev, { align: "auto", behavior: "smooth" });
+      virtualizer.scrollToIndex(prev, { align: "auto", behavior: "auto" });
     },
     ArrowUp: () => {
       const prev = Math.max(selectedIndex - 1, 0);
       setSelectedIndex(prev);
       const prevStory = stories[prev];
       if (prevStory) $activeStory.set({ feedType, storyId: prevStory.id });
-      virtualizer.scrollToIndex(prev, { align: "auto", behavior: "smooth" });
+      virtualizer.scrollToIndex(prev, { align: "auto", behavior: "auto" });
     },
     Enter: () => {
       if (stories[selectedIndex]) {
@@ -286,7 +286,7 @@ export function StoryList({
   }
 
   return (
-    <div ref={scrollRef} className="h-full overflow-y-auto overscroll-contain py-3">
+    <div ref={scrollRef} className="app-scroll flex-1">
       {/* Virtualized story list */}
       <div
         style={{
@@ -295,57 +295,51 @@ export function StoryList({
           position: "relative",
         }}
       >
-        <div
-          style={{
-            position: "relative",
-            width: "100%",
-          }}
-        >
-          {virtualItems.map((virtualRow) => {
-            const story = stories[virtualRow.index];
-            if (!story) return null;
-            const i = virtualRow.index;
-            return (
-              <div
-                key={story.id}
-                data-index={virtualRow.index}
-                ref={virtualizer.measureElement}
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  width: "100%",
-                  transform: `translateY(${virtualRow.start}px)`,
+        {virtualItems.map((virtualRow) => {
+          const story = stories[virtualRow.index];
+          if (!story) return null;
+          const i = virtualRow.index;
+          return (
+            <div
+              key={story.id}
+              data-index={virtualRow.index}
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                height: STORY_ROW_HEIGHT,
+                width: "100%",
+                transform: `translateY(${virtualRow.start}px)`,
+              }}
+            >
+              <StoryItem
+                story={story}
+                rank={i + 1}
+                isSelected={i === selectedIndex}
+                onClick={() => {
+                  $activeStory.set({ feedType, storyId: story.id });
+                  persistCurrentFeedPosition();
+                  onStoryClick(story.id);
                 }}
-              >
-                <StoryItem
-                  story={story}
-                  rank={i + 1}
-                  isSelected={i === selectedIndex}
-                  onClick={() => {
-                    $activeStory.set({ feedType, storyId: story.id });
-                    persistCurrentFeedPosition();
-                    onStoryClick(story.id);
-                  }}
-                  onHover={() => {
-                    setSelectedIndex(i);
-                    $activeStory.set({ feedType, storyId: story.id });
-                  }}
-                  onUserClick={(id) => {
-                    persistCurrentFeedPosition();
-                    onUserClick(id);
-                  }}
-                  onPrefetch={() => prefetchItem(story.id)}
-                />
-              </div>
-            );
-          })}
-        </div>
+                onHover={() => {
+                  setSelectedIndex(i);
+                  $activeStory.set({ feedType, storyId: story.id });
+                }}
+                onUserClick={(id) => {
+                  persistCurrentFeedPosition();
+                  onUserClick(id);
+                }}
+                onPrefetch={() => prefetchItem(story.id)}
+                style={{ height: STORY_ROW_HEIGHT }}
+              />
+            </div>
+          );
+        })}
       </div>
 
       {/* Pagination */}
       <div className="flex items-center justify-between mt-6 px-3">
-        <div className="text-[11px] text-fg-faint">
+        <div className="text-sm text-fg-faint">
           {stories.length} of {totalItems} stories
         </div>
         <div className="flex items-center gap-2">
@@ -357,14 +351,14 @@ export function StoryList({
                 setSelectedIndex(0);
                 scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
               }}
-              className="flex items-center gap-1 px-3 py-1.5 text-xs text-fg-muted hover:text-fg bg-surface hover:bg-surface-hover border border-edge rounded-md transition-colors"
+              className="flex items-center gap-1 rounded-md border border-edge bg-surface px-3 py-1.5 text-sm text-fg-muted transition-colors hover:bg-surface-hover hover:text-fg"
             >
               <CaretLeftIcon size={12} />
               Prev
             </button>
           )}
           {isLoadingMore && (
-            <div className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-fg-faint">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-fg-faint">
               <SpinnerIcon size={12} className="animate-spin" />
               Loading more...
             </div>

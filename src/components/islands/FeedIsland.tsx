@@ -37,7 +37,7 @@ export function FeedIsland({ feedType }: Props) {
 
   return (
     <ReactProviders>
-      <div className="h-full overflow-hidden">
+      <div className="flex h-full min-h-0 flex-col overflow-hidden">
         <StoryList
           feedType={feedType}
           onStoryClick={goToStory}

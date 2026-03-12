@@ -1,9 +1,4 @@
-import {
-  ArrowSquareOutIcon,
-  ChatCircleIcon,
-  ArrowFatUpIcon,
-  UserIcon,
-} from "@phosphor-icons/react";
+import { ArrowSquareOutIcon, ChatCircleIcon, ArrowFatUpIcon } from "@phosphor-icons/react";
 import { timeAgo, extractDomain } from "../lib/utils";
 import type { HNItem } from "../lib/types";
 
@@ -33,8 +28,8 @@ export function StoryItem({
   return (
     <div
       data-rank={rank}
-      className={`group relative flex gap-4  px-4 py-3.5 rounded-none sm:rounded-md cursor-pointer transition-all duration-150 ${
-        isSelected ? "sm:bg-accent-subtle sm:ring-1 sm:ring-accent/20" : "sm:hover:bg-surface-hover"
+      className={`group relative flex cursor-pointer items-stretch border-b border-edge/50 transition-colors duration-100 ${
+        isSelected ? "bg-accent-subtle" : "hover:bg-surface-hover"
       }`}
       onClick={onClick}
       onKeyDown={(event) => {
@@ -51,27 +46,40 @@ export function StoryItem({
       tabIndex={0}
       style={style}
     >
+      {/* Rank */}
+      <div className="hidden sm:flex w-9 shrink-0 items-center justify-center">
+        <span
+          className={`text-sm font-mono tabular-nums leading-none ${
+            isSelected ? "text-accent/60" : "text-fg-faint"
+          }`}
+        >
+          {rank}
+        </span>
+      </div>
+
       {/* Content */}
-      <div className="flex-1 min-w-0">
+      <div className="flex min-w-0 flex-1 flex-col justify-center gap-2 py-3 pr-3 sm:pl-0 pl-3">
         {/* Title row */}
-        <div className="flex items-baseline gap-2">
+        <div className="flex min-w-0 items-baseline gap-2">
           <h3
-            className={`text-xl leading-snug font-medium ${
-              isSelected ? "text-fg sm:text-accent" : "text-fg sm:group-hover:text-accent"
+            className={`min-w-0 flex-1 line-clamp-2 text-lg font-medium leading-tight tracking-tight ${
+              isSelected ? "text-accent" : "text-fg group-hover:text-accent"
             } transition-colors`}
           >
             {story.title}
           </h3>
           {domain && (
-            <span className="shrink-0 text-sm text-fg-faint hidden sm:inline">({domain})</span>
+            <span className="hidden shrink-0 self-end truncate pb-px leading-none text-sm text-fg-faint/70 sm:inline-block sm:max-w-32">
+              {domain}
+            </span>
           )}
         </div>
 
         {/* Meta row */}
-        <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-1.5 text-base text-fg-muted">
+        <div className="flex min-w-0 items-center gap-x-3 overflow-hidden text-base leading-none text-fg-faint">
           {story.score != null && (
-            <span className="flex items-center gap-1">
-              <ArrowFatUpIcon size={13} weight="bold" className="text-accent/70" />
+            <span className="flex shrink-0 items-center gap-0.5 text-accent/80 font-medium tabular-nums">
+              <ArrowFatUpIcon size={11} weight="fill" />
               {story.score}
             </span>
           )}
@@ -82,16 +90,15 @@ export function StoryItem({
                 e.stopPropagation();
                 onUserClick(story.by!);
               }}
-              className="flex items-center gap-1 hover:text-accent transition-colors"
+              className="shrink-0 max-w-32 truncate text-left text-fg-muted hover:text-accent transition-colors"
             >
-              <UserIcon size={13} />
               {story.by}
             </button>
           )}
-          <span className="text-fg-faint">{timeAgo(story.time)}</span>
+          <span className="shrink-0">{timeAgo(story.time)}</span>
           {story.descendants != null && (
-            <span className="flex items-center gap-1">
-              <ChatCircleIcon size={13} />
+            <span className="flex shrink-0 items-center gap-0.5 text-fg-muted">
+              <ChatCircleIcon size={11} />
               {story.descendants}
             </span>
           )}
@@ -101,9 +108,9 @@ export function StoryItem({
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="flex items-center gap-1 text-fg-faint hover:text-accent transition-colors ml-auto opacity-0 group-hover:opacity-100"
+              className="ml-auto shrink-0 text-fg-faint/40 opacity-0 transition-all hover:text-accent group-hover:opacity-100"
             >
-              <ArrowSquareOutIcon size={13} />
+              <ArrowSquareOutIcon size={12} />
             </a>
           )}
         </div>

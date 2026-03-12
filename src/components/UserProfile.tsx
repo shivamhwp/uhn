@@ -65,8 +65,8 @@ export function UserProfile({ userId, onBack, onStoryClick }: Props) {
   if (!user) {
     return (
       <div className="py-12 text-center">
-        <p className="text-fg-faint text-sm">User not found.</p>
-        <button onClick={onBack} className="text-accent text-xs mt-2 hover:underline">
+        <p className="text-base text-fg-faint">User not found.</p>
+        <button onClick={onBack} className="mt-2 text-sm text-accent hover:underline">
           Go back
         </button>
       </div>
@@ -78,7 +78,7 @@ export function UserProfile({ userId, onBack, onStoryClick }: Props) {
       {/* Back */}
       <button
         onClick={onBack}
-        className="flex items-center gap-1.5 text-xs text-fg-muted hover:text-accent transition-colors mb-4 group"
+        className="group mb-4 flex items-center gap-1.5 text-sm text-fg-muted transition-colors hover:text-accent"
       >
         <ArrowLeftIcon size={14} className="group-hover:-translate-x-0.5 transition-transform" />
         Back
@@ -86,8 +86,8 @@ export function UserProfile({ userId, onBack, onStoryClick }: Props) {
 
       {/* Profile header */}
       <div className="bg-surface border border-edge rounded-lg p-5">
-        <h1 className="text-lg font-semibold text-fg">{user.id}</h1>
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-sm text-fg-muted">
+        <h1 className="break-words text-xl font-semibold text-fg">{user.id}</h1>
+        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-base text-fg-muted">
           <span className="flex items-center gap-1.5">
             <LightningIcon size={13} weight="bold" className="text-accent" />
             {user.karma.toLocaleString()} karma
@@ -105,7 +105,7 @@ export function UserProfile({ userId, onBack, onStoryClick }: Props) {
         </div>
         {user.about && (
           <div
-            className="comment-html mt-3 pt-3 border-t border-edge text-lg text-fg-muted leading-relaxed"
+            className="comment-html mt-3 border-t border-edge pt-3 text-xl leading-relaxed text-fg-muted"
             dangerouslySetInnerHTML={{ __html: user.about }}
           />
         )}
@@ -114,7 +114,7 @@ export function UserProfile({ userId, onBack, onStoryClick }: Props) {
       {/* Submissions */}
       {stories.length > 0 && (
         <div className="mt-6">
-          <h2 className="text-xs font-semibold text-fg-muted uppercase tracking-wider mb-3">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-fg-muted">
             Recent Stories
           </h2>
           <div className="space-y-0.5">
@@ -124,15 +124,15 @@ export function UserProfile({ userId, onBack, onStoryClick }: Props) {
                 onClick={() => onStoryClick(story.id)}
                 className="w-full text-left px-3 py-2.5 rounded-md hover:bg-surface-hover transition-colors group"
               >
-                <div className="text-lg font-medium text-fg group-hover:text-accent transition-colors">
+                <div className="break-words text-xl font-medium text-fg transition-colors group-hover:text-accent">
                   {story.title}
                   {story.url && (
-                    <span className="text-sm text-fg-faint font-normal ml-2">
+                    <span className="ml-2 text-base font-normal text-fg-faint">
                       ({extractDomain(story.url)})
                     </span>
                   )}
                 </div>
-                <div className="text-sm text-fg-muted mt-0.5">
+                <div className="mt-0.5 text-base text-fg-muted">
                   {story.score} pts · {timeAgo(story.time)}
                   {story.descendants != null && ` · ${story.descendants} comments`}
                 </div>
@@ -143,7 +143,7 @@ export function UserProfile({ userId, onBack, onStoryClick }: Props) {
           {user.submitted && showCount < user.submitted.length && (
             <button
               onClick={() => setShowCount((c) => c + SUBMISSIONS_PER_PAGE)}
-              className="flex items-center gap-1.5 mx-3 mt-3 text-xs text-accent hover:text-accent-hover transition-colors"
+              className="mx-3 mt-3 flex items-center gap-1.5 text-sm text-accent transition-colors hover:text-accent-hover"
             >
               Load more submissions
             </button>

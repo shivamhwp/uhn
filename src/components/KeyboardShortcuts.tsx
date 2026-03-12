@@ -46,7 +46,7 @@ export function KeyboardShortcuts({ isOpen, onClose }: Props) {
         onPointerDown={(event) => event.stopPropagation()}
       >
         <div className="flex items-center justify-between px-5 py-3 border-b border-edge/50">
-          <span className="text-sm font-medium text-fg-muted">Keyboard Shortcuts</span>
+          <span className="text-base font-medium text-fg-muted">Keyboard Shortcuts</span>
           <button
             onClick={onClose}
             className="text-fg-faint hover:text-fg transition-colors p-0.5"
@@ -61,12 +61,12 @@ export function KeyboardShortcuts({ isOpen, onClose }: Props) {
               key={`${s.desc}-${s.keys.join("-")}`}
               className="flex items-center justify-between py-2"
             >
-              <span className="text-xs text-fg-muted">{s.desc}</span>
+              <span className="text-sm text-fg-muted">{s.desc}</span>
               <div className="flex items-center gap-1">
                 {s.keys.map((key) => (
                   <kbd
                     key={key}
-                    className="inline-flex items-center justify-center min-w-6 h-6 px-1.5 text-xs font-medium text-fg-faint bg-kbd border border-kbd-edge rounded"
+                    className="inline-flex h-7 min-w-7 items-center justify-center rounded border border-kbd-edge bg-kbd px-1.5 text-sm font-medium text-fg-faint"
                   >
                     {key}
                   </kbd>

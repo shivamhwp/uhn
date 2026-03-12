@@ -23,7 +23,7 @@ export function SearchIsland({ initialQuery }: Props) {
 
   return (
     <ReactProviders>
-      <div ref={scrollRef} className="h-full overflow-y-auto overscroll-contain py-4 animate-fade">
+      <div ref={scrollRef} className="app-scroll flex-1 py-4 animate-fade">
         <SearchResultsList
           query={initialQuery}
           onStoryClick={(id) => window.location.assign(`/item?id=${id}`)}

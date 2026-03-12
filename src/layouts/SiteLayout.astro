@@ -31,7 +31,7 @@ const isProd = import.meta.env.PROD;
 const activeFeedLabel = activeFeed ? feedLabels[activeFeed] : "Feeds";
 ---
 
-<html lang="en">
+<html lang="en" class="h-full">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -97,8 +97,8 @@ const activeFeedLabel = activeFeed ? feedLabels[activeFeed] : "Feeds";
       }
     </script>
   </head>
-  <body>
-    <div class="box-border w-full max-w-4xl mx-auto h-dvh flex flex-col px-0.5 sm:px-4">
+  <body class="h-full">
+    <div class="app-shell box-border mx-auto flex h-screen min-h-dvh w-full max-w-4xl flex-col">
       <header class="shrink-0 border-b border-edge bg-bg/80 backdrop-blur-md px-2.5">
         <div class="h-14 md:h-15 flex items-center gap-2">
           <div class="flex-1 min-w-0 flex items-center gap-2">
@@ -109,7 +109,7 @@ const activeFeedLabel = activeFeed ? feedLabels[activeFeed] : "Feeds";
                   <a
                     href={feedPath(feedType)}
                     class:list={[
-                      "h-9 px-3 rounded-md text-xs font-medium transition-colors whitespace-nowrap inline-flex items-center justify-center",
+                      "inline-flex h-9 items-center justify-center whitespace-nowrap rounded-md px-3 text-sm font-medium transition-colors",
                       {
                         "bg-accent-subtle text-accent border border-accent/30": activeFeed === feedType,
                         "text-fg-muted hover:text-fg hover:bg-surface-hover": activeFeed !== feedType,
@@ -126,7 +126,7 @@ const activeFeedLabel = activeFeed ? feedLabels[activeFeed] : "Feeds";
               <button
                 id="mobile-feed-trigger"
                 type="button"
-                class="h-10 w-full min-w-0 px-3 rounded-md border border-edge bg-surface text-sm text-fg inline-flex items-center justify-between gap-2 hover:bg-surface-hover transition-colors"
+                class="inline-flex h-10 w-full min-w-0 items-center justify-between gap-2 rounded-md border border-edge bg-surface px-3 text-base text-fg transition-colors hover:bg-surface-hover"
                 aria-haspopup="menu"
                 aria-expanded="false"
                 aria-controls="mobile-feed-menu"
@@ -151,7 +151,7 @@ const activeFeedLabel = activeFeed ? feedLabels[activeFeed] : "Feeds";
                       <a
                         href={feedPath(feedType)}
                         class:list={[
-                          "h-9 px-2.5 rounded-sm text-sm inline-flex w-full items-center justify-between transition-colors",
+                          "inline-flex h-9 w-full items-center justify-between rounded-sm px-2.5 text-base transition-colors",
                           {
                             "bg-accent-subtle text-accent": isActive,
                             "text-fg-muted hover:text-fg hover:bg-surface-hover": !isActive,
@@ -186,7 +186,7 @@ const activeFeedLabel = activeFeed ? feedLabels[activeFeed] : "Feeds";
                   name="q"
                   value={searchQuery}
                   placeholder="Search stories..."
-                  class="w-full h-10 box-border pl-9 pr-3 rounded-md border border-edge bg-surface text-sm text-fg placeholder:text-fg-faint focus:outline-none focus:ring-1 focus:ring-accent/30 focus:border-accent/50"
+                  class="box-border h-10 w-full rounded-md border border-edge bg-surface pl-9 pr-3 text-base text-fg placeholder:text-fg-faint focus:border-accent/50 focus:outline-none focus:ring-1 focus:ring-accent/30"
                 />
               </div>
               <button
@@ -233,7 +233,7 @@ const activeFeedLabel = activeFeed ? feedLabels[activeFeed] : "Feeds";
         </div>
       </header>
 
-      <main class="min-h-0 flex flex-1 flex-col overflow-hidden pb-4 sm:pb-12" style="padding-bottom: max(1rem, env(safe-area-inset-bottom))">
+      <main class="app-main min-h-0 flex flex-1 flex-col overflow-hidden pb-4 sm:pb-12">
         <slot />
       </main>
     </div>

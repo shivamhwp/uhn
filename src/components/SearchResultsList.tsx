@@ -63,7 +63,7 @@ export function SearchResultsList({ query, onStoryClick, onUserClick }: Props) {
 
   if (!query.trim()) {
     return (
-      <div className="py-10 text-center text-fg-faint text-xs">
+      <div className="py-10 text-center text-sm text-fg-faint">
         Type in the top search bar to search stories.
       </div>
     );
@@ -72,7 +72,7 @@ export function SearchResultsList({ query, onStoryClick, onUserClick }: Props) {
   return (
     <div className="py-3 animate-fade">
       <div className="flex flex-wrap items-center justify-between gap-2 mb-2 px-1">
-        <span className="text-[11px] text-fg-faint">
+        <span className="text-sm text-fg-faint">
           {data?.nbHits?.toLocaleString() ?? 0} results
           {isFetching && <SpinnerIcon size={10} className="animate-spin inline ml-1.5" />}
         </span>
@@ -83,7 +83,7 @@ export function SearchResultsList({ query, onStoryClick, onUserClick }: Props) {
                 key={mode}
                 type="button"
                 onClick={() => setSortBy(mode)}
-                className={`rounded-sm px-2 py-1 text-[11px] transition-colors ${
+                className={`rounded-sm px-2 py-1 text-sm transition-colors ${
                   sortBy === mode
                     ? "bg-accent-subtle text-accent"
                     : "text-fg-faint hover:text-fg hover:bg-surface-hover"
@@ -94,7 +94,7 @@ export function SearchResultsList({ query, onStoryClick, onUserClick }: Props) {
             ))}
           </div>
           {data && data.nbPages > 1 && (
-            <span className="text-[11px] text-fg-faint">
+            <span className="text-sm text-fg-faint">
               Page {data.page + 1} of {data.nbPages}
             </span>
           )}
@@ -102,7 +102,7 @@ export function SearchResultsList({ query, onStoryClick, onUserClick }: Props) {
       </div>
 
       {hits.length === 0 && !isFetching && (
-        <div className="py-10 text-center text-fg-faint text-xs">No results found.</div>
+        <div className="py-10 text-center text-sm text-fg-faint">No results found.</div>
       )}
 
       <div className="space-y-0.5">
@@ -118,17 +118,17 @@ export function SearchResultsList({ query, onStoryClick, onUserClick }: Props) {
                   onStoryClick(Number(hit.objectID));
                 }
               }}
-              className={`group flex gap-3 px-3 py-2.5 rounded-md cursor-pointer transition-all duration-150 ${
+              className={`group flex gap-3 rounded-md border border-transparent px-3 py-2.5 cursor-pointer transition-all duration-150 ${
                 i === selectedIndex
-                  ? "bg-accent-subtle ring-1 ring-accent/20"
-                  : "hover:bg-surface-hover"
+                  ? "border-accent/20 bg-accent-subtle"
+                  : "hover:border-edge/70 hover:bg-surface-hover"
               }`}
               role="button"
               tabIndex={0}
             >
               <div className="shrink-0 w-8 text-right">
                 <span
-                  className={`text-xs tabular-nums ${
+                  className={`text-sm tabular-nums ${
                     i === selectedIndex ? "text-accent font-semibold" : "text-fg-faint"
                   }`}
                 >
@@ -136,21 +136,21 @@ export function SearchResultsList({ query, onStoryClick, onUserClick }: Props) {
                 </span>
               </div>
               <div className="flex-1 min-w-0">
-                <div className="flex items-baseline gap-2">
+                <div className="flex min-w-0 items-baseline gap-2">
                   <h3
-                    className={`text-lg leading-snug font-medium ${
+                    className={`min-w-0 break-words text-xl font-medium leading-snug ${
                       i === selectedIndex ? "text-accent" : "text-fg group-hover:text-accent"
                     } transition-colors`}
                   >
                     {hit.title}
                   </h3>
                   {domain && (
-                    <span className="shrink-0 text-sm text-fg-faint hidden sm:inline">
+                    <span className="hidden shrink-0 text-base text-fg-faint sm:inline">
                       ({domain})
                     </span>
                   )}
                 </div>
-                <div className="flex items-center flex-wrap gap-x-3 gap-y-0.5 mt-1 text-sm text-fg-muted">
+                <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-base text-fg-muted">
                   <span>{hit.points} pts</span>
                   <button
                     onClick={(e) => {
@@ -189,7 +189,7 @@ export function SearchResultsList({ query, onStoryClick, onUserClick }: Props) {
               setSelectedIndex(0);
             }}
             disabled={page === 0}
-            className="flex items-center gap-1 px-3 py-1.5 text-xs text-fg-muted hover:text-fg bg-surface hover:bg-surface-hover border border-edge rounded-md transition-colors disabled:opacity-30 disabled:pointer-events-none"
+            className="flex items-center gap-1 rounded-md border border-edge bg-surface px-3 py-1.5 text-sm text-fg-muted transition-colors hover:bg-surface-hover hover:text-fg disabled:pointer-events-none disabled:opacity-30"
           >
             <CaretLeftIcon size={12} />
             Prev
@@ -200,7 +200,7 @@ export function SearchResultsList({ query, onStoryClick, onUserClick }: Props) {
               setSelectedIndex(0);
             }}
             disabled={page >= data.nbPages - 1}
-            className="flex items-center gap-1 px-3 py-1.5 text-xs text-accent hover:text-accent-hover bg-accent-subtle border border-accent/20 rounded-md transition-colors disabled:opacity-30 disabled:pointer-events-none"
+            className="flex items-center gap-1 rounded-md border border-accent/20 bg-accent-subtle px-3 py-1.5 text-sm text-accent transition-colors hover:text-accent-hover disabled:pointer-events-none disabled:opacity-30"
           >
             Next
             <CaretRightIcon size={12} />

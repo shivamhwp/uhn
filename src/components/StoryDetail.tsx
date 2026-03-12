@@ -52,8 +52,8 @@ export function StoryDetail({
   if (!story) {
     return (
       <div className="py-12 px-4 text-center">
-        <p className="text-fg-faint text-sm">Story not found.</p>
-        <button type="button" onClick={onBack} className="text-accent text-xs mt-2 hover:underline">
+        <p className="text-base text-fg-faint">Story not found.</p>
+        <button type="button" onClick={onBack} className="mt-2 text-sm text-accent hover:underline">
           Go back
         </button>
       </div>
@@ -66,25 +66,25 @@ export function StoryDetail({
       <button
         type="button"
         onClick={onBack}
-        className="flex items-center gap-1.5 text-xs text-fg-muted hover:text-accent transition-colors mb-4 group"
+        className="group mb-4 flex items-center gap-1.5 text-sm text-fg-muted transition-colors hover:text-accent"
       >
         <ArrowLeftIcon size={14} className="group-hover:-translate-x-0.5 transition-transform" />
         Back
-        <kbd className="text-[9px] px-1 py-0.5 bg-kbd border border-kbd-edge rounded text-fg-faint ml-1">
+        <kbd className="ml-1 rounded border border-kbd-edge bg-kbd px-1 py-0.5 text-[11px] text-fg-faint">
           esc
         </kbd>
       </button>
 
       {/* Story header */}
       <article>
-        <h1 className="text-lg font-semibold text-fg leading-snug">{story.title}</h1>
+        <h1 className="break-words text-xl font-semibold leading-snug text-fg">{story.title}</h1>
 
         {domain && (
           <a
             href={story.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-sm text-accent hover:text-accent-hover mt-2 transition-colors"
+            className="mt-2 inline-flex items-center gap-1.5 text-base text-accent transition-colors hover:text-accent-hover"
           >
             <ArrowSquareOutIcon size={12} />
             {domain}
@@ -92,7 +92,7 @@ export function StoryDetail({
         )}
 
         {/* Meta */}
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3 text-sm text-fg-muted">
+        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-base text-fg-muted">
           {story.score != null && (
             <span className="flex items-center gap-1">
               <ArrowFatUpIcon size={12} weight="bold" className="text-accent" />
@@ -124,7 +124,7 @@ export function StoryDetail({
         {/* Story text (Ask HN, etc.) */}
         {story.text && (
           <div
-            className="story-html mt-4 p-4 bg-surface border border-edge rounded-lg text-base text-fg leading-relaxed"
+            className="story-html mt-4 rounded-lg border border-edge bg-surface p-4 text-lg leading-relaxed text-fg"
             dangerouslySetInnerHTML={{ __html: story.text ?? "" }}
           />
         )}
@@ -132,7 +132,7 @@ export function StoryDetail({
 
       {/* Comments */}
       <div className="mt-6 border-t border-edge pt-4">
-        <h2 className="text-xs font-semibold text-fg-muted uppercase tracking-wider mb-4">
+        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-fg-muted">
           Comments
         </h2>
         <CommentTree

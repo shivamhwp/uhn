@@ -27,7 +27,7 @@ export function UserIsland({ userId }: Props) {
 
   return (
     <ReactProviders>
-      <div ref={scrollRef} className="h-full overflow-y-auto overscroll-contain">
+      <div ref={scrollRef} className="app-scroll flex-1">
         <UserProfile userId={userId} onBack={goBack} onStoryClick={goToStory} />
       </div>
     </ReactProviders>
