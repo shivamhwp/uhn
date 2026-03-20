@@ -303,11 +303,11 @@ export function StoryList({
             <div
               key={story.id}
               data-index={virtualRow.index}
+              ref={virtualizer.measureElement}
               style={{
                 position: "absolute",
                 top: 0,
                 left: 0,
-                height: STORY_ROW_HEIGHT,
                 width: "100%",
                 transform: `translateY(${virtualRow.start}px)`,
               }}
@@ -330,7 +330,6 @@ export function StoryList({
                   onUserClick(id);
                 }}
                 onPrefetch={() => prefetchItem(story.id)}
-                style={{ height: STORY_ROW_HEIGHT }}
               />
             </div>
           );

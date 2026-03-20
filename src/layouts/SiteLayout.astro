@@ -41,7 +41,8 @@ const activeFeedLabel = activeFeed ? feedLabels[activeFeed] : "Feeds";
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/favicon.svg" />
     <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#ff6600" />
+    <meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f8f8f6" media="(prefers-color-scheme: light)" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="UHN" />
@@ -99,7 +100,7 @@ const activeFeedLabel = activeFeed ? feedLabels[activeFeed] : "Feeds";
   </head>
   <body class="h-full">
     <div class="app-shell box-border mx-auto flex h-screen min-h-dvh w-full max-w-4xl flex-col">
-      <header class="shrink-0 border-b border-edge bg-bg/80 backdrop-blur-md px-2.5">
+      <header class="shrink-0 border-b border-edge bg-bg px-2.5">
         <div class="h-14 md:h-15 flex items-center gap-2">
           <div class="flex-1 min-w-0 flex items-center gap-2">
             <div id="normal-nav-wrapper" class="flex-1 min-w-0 flex items-center">

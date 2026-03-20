@@ -8,18 +8,16 @@ export default defineConfig({
   output: "static",
   adapter: vercel(),
   integrations: [react()],
-  experimental: {
-    fonts: [
-      {
-        provider: fontProviders.google(),
-        name: "Geist",
-        cssVariable: "--font-geist",
-        weights: [300, 400, 500, 600, 700],
-        styles: ["normal"],
-        fallbacks: ["system-ui", "sans-serif"],
-      },
-    ],
-  },
+  fonts: [
+    {
+      provider: fontProviders.google(),
+      name: "Geist",
+      cssVariable: "--font-geist",
+      weights: [300, 400, 500, 600, 700],
+      styles: ["normal"],
+      fallbacks: ["system-ui", "sans-serif"],
+    },
+  ],
   vite: {
     plugins: [tailwindcss()],
     resolve: {
