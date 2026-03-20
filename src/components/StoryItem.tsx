@@ -58,7 +58,7 @@ export function StoryItem({
       </div>
 
       {/* Content */}
-      <div className="flex min-w-0 flex-1 flex-col justify-center gap-2 py-3 pr-3 sm:pl-0 pl-3">
+      <div className="flex min-w-0 flex-1 flex-col justify-center gap-2.5 py-4 pr-3 sm:pl-0 pl-3">
         {/* Title row */}
         <div className="flex min-w-0 items-baseline gap-2">
           <h3

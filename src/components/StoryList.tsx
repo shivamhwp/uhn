@@ -20,7 +20,7 @@ interface Props {
   onToggleShortcuts: () => void;
 }
 
-const STORY_ROW_HEIGHT = 88;
+const STORY_ROW_HEIGHT = 96;
 
 const feedScrollTop = new Map<FeedType, number>();
 const getFeedScrollStorageKey = (feedType: FeedType) => `uhn:feed-scroll:${feedType}`;
