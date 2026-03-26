@@ -1,11 +1,5 @@
 import { useStore } from "@nanostores/react";
-import {
-  ArrowLeftIcon,
-  CalendarIcon,
-  LightningIcon,
-  ArticleIcon,
-  SpinnerIcon,
-} from "@phosphor-icons/react";
+import { ArrowLeftIcon, CalendarIcon, LightningIcon, ArticleIcon } from "@phosphor-icons/react";
 import { useUser } from "../lib/hooks";
 import { formatDate, timeAgo, extractDomain } from "../lib/utils";
 import { useHotkeys } from "../lib/useHotkeys";
@@ -13,6 +7,7 @@ import type { HNItem } from "../lib/types";
 import { useQueries } from "@tanstack/react-query";
 import { fetchItem } from "../lib/api";
 import { $userProfileShowCount, setUserProfileShowCountEntry } from "../lib/stores";
+import { AutoLoadIndicator, LoadingNotice } from "./LoadingNotice";
 
 interface Props {
   userId: string;
@@ -47,6 +42,8 @@ export function UserProfile({ userId, onBack, onStoryClick }: Props) {
       (item): item is HNItem =>
         item != null && item.type === "story" && !item.dead && !item.deleted,
     );
+  const hasMoreSubmissions = (user?.submitted?.length ?? 0) > showCount;
+  const isLoadingMore = submissions.slice(-SUBMISSIONS_PER_PAGE).some((query) => query.isLoading);
 
   useHotkeys({
     h: () => onBack(),
@@ -55,11 +52,7 @@ export function UserProfile({ userId, onBack, onStoryClick }: Props) {
   });
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-16 animate-fade">
-        <SpinnerIcon size={24} className="animate-spin text-fg-muted" />
-      </div>
-    );
+    return <LoadingNotice className="py-16 animate-fade" />;
   }
 
   if (!user) {
@@ -139,15 +132,12 @@ export function UserProfile({ userId, onBack, onStoryClick }: Props) {
               </button>
             ))}
           </div>
-
-          {user.submitted && showCount < user.submitted.length && (
-            <button
-              onClick={() => setShowCount((c) => c + SUBMISSIONS_PER_PAGE)}
-              className="mx-3 mt-3 flex items-center gap-1.5 text-sm text-accent transition-colors hover:text-accent-hover"
-            >
-              Load more submissions
-            </button>
-          )}
+          <AutoLoadIndicator
+            enabled={hasMoreSubmissions}
+            isLoading={isLoadingMore}
+            onLoadMore={() => setShowCount((count) => count + SUBMISSIONS_PER_PAGE)}
+            className="mt-3"
+          />
         </div>
       )}
     </div>

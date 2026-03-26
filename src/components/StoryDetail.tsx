@@ -5,7 +5,6 @@ import {
   UserIcon,
   ChatCircleIcon,
   ClockIcon,
-  SpinnerIcon,
 } from "@phosphor-icons/react";
 import { useItem } from "../lib/hooks";
 import type { HNItem } from "../lib/types";
@@ -13,6 +12,7 @@ import { useTheme } from "./ThemeProvider";
 import { timeAgo, extractDomain, formatDate } from "../lib/utils";
 import { useHotkeys } from "../lib/useHotkeys";
 import { CommentTree } from "./CommentTree";
+import { LoadingNotice } from "./LoadingNotice";
 
 interface Props {
   initialComments?: HNItem[];
@@ -42,11 +42,7 @@ export function StoryDetail({
   });
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-16 animate-fade">
-        <SpinnerIcon size={24} className="animate-spin text-fg-muted" />
-      </div>
-    );
+    return <LoadingNotice className="py-16 animate-fade" />;
   }
 
   if (!story) {

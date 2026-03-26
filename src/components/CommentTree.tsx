@@ -1,8 +1,9 @@
 import { useState, type CSSProperties } from "react";
-import { CaretDownIcon, CaretRightIcon, UserIcon, SpinnerIcon } from "@phosphor-icons/react";
+import { CaretDownIcon, CaretRightIcon, UserIcon } from "@phosphor-icons/react";
 import { useComments, useItem } from "../lib/hooks";
 import type { HNItem } from "../lib/types";
 import { timeAgo } from "../lib/utils";
+import { AutoLoadIndicator, LoadingNotice } from "./LoadingNotice";
 
 const INITIAL_TOP_LEVEL_COMMENTS = 20;
 const COMMENT_PAGE_SIZE = 20;
@@ -117,10 +118,6 @@ export function CommentTree({ commentIds, initialComments = [], onUserClick }: C
   const [visibleCount, setVisibleCount] = useState(INITIAL_TOP_LEVEL_COMMENTS);
   const visibleCommentIds = commentIds.slice(0, visibleCount);
   const hasMoreTopLevel = visibleCount < commentIds.length;
-  const nextCommentBatchSize = Math.min(
-    COMMENT_PAGE_SIZE,
-    commentIds.length - visibleCommentIds.length,
-  );
   const { comments, isLoading } = useComments(visibleCommentIds, initialComments);
   const visibleTopLevelComments = comments.filter((comment) => !comment.deleted && !comment.dead);
 
@@ -129,14 +126,7 @@ export function CommentTree({ commentIds, initialComments = [], onUserClick }: C
   }
 
   if (visibleTopLevelComments.length === 0 && !hasMoreTopLevel) {
-    if (isLoading) {
-      return (
-        <div className="flex items-center justify-center gap-2 py-8 text-sm text-fg-faint">
-          <SpinnerIcon size={14} className="animate-spin" />
-          Loading comments...
-        </div>
-      );
-    }
+    if (isLoading) return <LoadingNotice className="py-8" />;
 
     return <div className="py-12 text-center text-sm text-fg-faint">No comments yet.</div>;
   }
@@ -146,18 +136,12 @@ export function CommentTree({ commentIds, initialComments = [], onUserClick }: C
       {visibleCommentIds.map((id) => (
         <Comment key={id} commentId={id} depth={0} onUserClick={onUserClick} />
       ))}
-      {hasMoreTopLevel && (
-        <div className="pt-3">
-          <button
-            type="button"
-            onClick={() => setVisibleCount((count) => count + COMMENT_PAGE_SIZE)}
-            className="text-sm text-accent transition-colors hover:text-accent-hover"
-          >
-            Load {nextCommentBatchSize} more comments (
-            {commentIds.length - visibleCommentIds.length} remaining)
-          </button>
-        </div>
-      )}
+      <AutoLoadIndicator
+        enabled={hasMoreTopLevel}
+        isLoading={hasMoreTopLevel && isLoading}
+        onLoadMore={() => setVisibleCount((count) => count + COMMENT_PAGE_SIZE)}
+        className="pt-3"
+      />
     </div>
   );
 }

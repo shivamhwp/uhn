@@ -9,7 +9,7 @@ import { useTheme } from "./ThemeProvider";
 import { $activeStory, $feedPage } from "../lib/stores";
 import { useHotkeys } from "../lib/useHotkeys";
 import { StoryItem } from "./StoryItem";
-import { CaretLeftIcon, SpinnerIcon } from "@phosphor-icons/react";
+import { LoadingNotice } from "./LoadingNotice";
 import type { FeedType } from "../lib/types";
 
 interface Props {
@@ -278,11 +278,7 @@ export function StoryList({
   }, [hasMore, isLoadingMore, lastVisibleIndex, loadMore, stories.length]);
 
   if (idsLoading || isLoading) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <SpinnerIcon size={24} className="animate-spin text-fg-muted" />
-      </div>
-    );
+    return <LoadingNotice className="py-16 animate-fade" />;
   }
 
   return (
@@ -335,35 +331,7 @@ export function StoryList({
           );
         })}
       </div>
-
-      {/* Pagination */}
-      <div className="flex items-center justify-between mt-6 px-3">
-        <div className="text-sm text-fg-faint">
-          {stories.length} of {totalItems} stories
-        </div>
-        <div className="flex items-center gap-2">
-          {page > 0 && (
-            <button
-              type="button"
-              onClick={() => {
-                setPage((p) => p - 1);
-                setSelectedIndex(0);
-                scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-              }}
-              className="flex items-center gap-1 rounded-md border border-edge bg-surface px-3 py-1.5 text-sm text-fg-muted transition-colors hover:bg-surface-hover hover:text-fg"
-            >
-              <CaretLeftIcon size={12} />
-              Prev
-            </button>
-          )}
-          {isLoadingMore && (
-            <div className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-fg-faint">
-              <SpinnerIcon size={12} className="animate-spin" />
-              Loading more...
-            </div>
-          )}
-        </div>
-      </div>
+      {(hasMore || isLoadingMore) && <LoadingNotice className="py-6" />}
     </div>
   );
 }

@@ -1,16 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { useStore } from "@nanostores/react";
-import {
-  ArrowSquareOutIcon,
-  CaretLeftIcon,
-  CaretRightIcon,
-  SpinnerIcon,
-} from "@phosphor-icons/react";
+import { ArrowSquareOutIcon, CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react";
 import { useSearch } from "../lib/hooks";
 import { extractDomain, timeAgo } from "../lib/utils";
 import { $searchPage, setSearchPageEntry } from "../lib/stores";
 import { useHotkeys } from "../lib/useHotkeys";
 import type { SearchFilters } from "../lib/types";
+import { LoadingNotice } from "./LoadingNotice";
 
 interface Props {
   query: string;
@@ -69,13 +65,14 @@ export function SearchResultsList({ query, onStoryClick, onUserClick }: Props) {
     );
   }
 
+  if (isFetching && hits.length === 0) {
+    return <LoadingNotice className="py-12 animate-fade" />;
+  }
+
   return (
     <div className="py-3 animate-fade">
       <div className="flex flex-wrap items-center justify-between gap-2 mb-2 px-1">
-        <span className="text-sm text-fg-faint">
-          {data?.nbHits?.toLocaleString() ?? 0} results
-          {isFetching && <SpinnerIcon size={10} className="animate-spin inline ml-1.5" />}
-        </span>
+        <span className="text-sm text-fg-faint">{data?.nbHits?.toLocaleString() ?? 0} results</span>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1 rounded-md border border-edge bg-surface p-0.5">
             {(["latest", "popular"] as const).map((mode) => (
@@ -207,6 +204,8 @@ export function SearchResultsList({ query, onStoryClick, onUserClick }: Props) {
           </button>
         </div>
       )}
+
+      {isFetching && hits.length > 0 && <LoadingNotice className="py-4" />}
     </div>
   );
 }
