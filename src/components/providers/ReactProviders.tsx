@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import type { Persister } from "@tanstack/react-query-persist-client";
 import { ThemeProvider } from "../ThemeProvider";
 import type { HNItem } from "../../lib/types";
+import { ReadStateProvider } from "./ReadStateProvider";
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 const FIVE_MINUTES_MS = 5 * 60 * 1000;
@@ -94,7 +95,9 @@ export function ReactProviders({ children }: { children: ReactNode }) {
         },
       }}
     >
-      <ThemeProvider>{children}</ThemeProvider>
+      <ReadStateProvider>
+        <ThemeProvider>{children}</ThemeProvider>
+      </ReadStateProvider>
     </PersistQueryClientProvider>
   );
 }

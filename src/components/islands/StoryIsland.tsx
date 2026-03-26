@@ -1,7 +1,8 @@
-import { useCallback, useLayoutEffect, useRef } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import { StoryDetail } from "../StoryDetail";
 import { ReactProviders } from "../providers/ReactProviders";
 import type { HNItem } from "../../lib/types";
+import { markStoryRead } from "../../lib/read-stories";
 
 interface Props {
   initialComments?: HNItem[];
@@ -26,6 +27,10 @@ export function StoryIsland({ storyId, initialStory, initialComments = [] }: Pro
 
   useLayoutEffect(() => {
     scrollRef.current?.scrollTo({ top: 0, behavior: "auto" });
+  }, [storyId]);
+
+  useEffect(() => {
+    void markStoryRead(storyId, "detail");
   }, [storyId]);
 
   return (

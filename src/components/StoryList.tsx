@@ -8,8 +8,10 @@ import { feedPath } from "../lib/feeds";
 import { useTheme } from "./ThemeProvider";
 import { $activeStory, $feedPage } from "../lib/stores";
 import { useHotkeys } from "../lib/useHotkeys";
+import { $readStoryIds, markStoryRead } from "../lib/read-stories";
 import { StoryItem } from "./StoryItem";
 import { LoadingNotice } from "./LoadingNotice";
+
 import type { FeedType } from "../lib/types";
 
 interface Props {
@@ -54,6 +56,7 @@ export function StoryList({
 }: Props) {
   const activeStory = useStore($activeStory);
   const feedPages = useStore($feedPage);
+  const readStoryIds = useStore($readStoryIds);
   const page = feedPages[feedType] ?? 0;
   const setPage = useCallback(
     (action: number | ((p: number) => number)) => {
@@ -213,6 +216,7 @@ export function StoryList({
     },
     Enter: () => {
       if (stories[selectedIndex]) {
+        void markStoryRead(stories[selectedIndex].id, "detail");
         $activeStory.set({ feedType, storyId: stories[selectedIndex].id });
         persistCurrentFeedPosition();
         onStoryClick(stories[selectedIndex].id);
@@ -220,7 +224,10 @@ export function StoryList({
     },
     o: () => {
       const story = stories[selectedIndex];
-      if (story?.url) window.open(story.url, "_blank", "noopener,noreferrer");
+      if (story?.url) {
+        void markStoryRead(story.id, "external");
+        window.open(story.url, "_blank", "noopener,noreferrer");
+      }
     },
     "/": () => {
       persistCurrentFeedPosition();
@@ -312,7 +319,9 @@ export function StoryList({
                 story={story}
                 rank={i + 1}
                 isSelected={i === selectedIndex}
+                isRead={readStoryIds.has(story.id)}
                 onClick={() => {
+                  void markStoryRead(story.id, "detail");
                   $activeStory.set({ feedType, storyId: story.id });
                   persistCurrentFeedPosition();
                   onStoryClick(story.id);
@@ -326,6 +335,9 @@ export function StoryList({
                   onUserClick(id);
                 }}
                 onPrefetch={() => prefetchItem(story.id)}
+                onOpenExternal={() => {
+                  void markStoryRead(story.id, "external");
+                }}
               />
             </div>
           );

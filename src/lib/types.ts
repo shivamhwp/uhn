@@ -53,3 +53,12 @@ export interface AlgoliaResponse {
   nbPages: number;
   hitsPerPage: number;
 }
+
+export type ReadSource = "detail" | "external" | "manual";
+
+export interface ReadStoryEntry {
+  storyId: number;
+  readAt: number;
+  updatedAt: number;
+  source: ReadSource;
+}

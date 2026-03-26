@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { useStore } from "@nanostores/react";
-import { ArrowLeftIcon, CalendarIcon, LightningIcon, ArticleIcon } from "@phosphor-icons/react";
+import { ArrowLeftIcon, CalendarIcon, LightningIcon, ArticleIcon, DotsThreeVerticalIcon } from "@phosphor-icons/react";
+import * as Popover from "@radix-ui/react-popover";
 import { useUser } from "../lib/hooks";
 import { formatDate, timeAgo, extractDomain } from "../lib/utils";
 import { useHotkeys } from "../lib/useHotkeys";
@@ -7,6 +9,7 @@ import type { HNItem } from "../lib/types";
 import { useQueries } from "@tanstack/react-query";
 import { fetchItem } from "../lib/api";
 import { $userProfileShowCount, setUserProfileShowCountEntry } from "../lib/stores";
+import { $readStoryIds, markStoryRead, markStoryUnread } from "../lib/read-stories";
 import { AutoLoadIndicator, LoadingNotice } from "./LoadingNotice";
 
 interface Props {
@@ -15,11 +18,121 @@ interface Props {
   onStoryClick: (id: number) => void;
 }
 
+function UserStoryItem({
+  story,
+  isRead,
+  onStoryClick,
+}: {
+  story: HNItem;
+  isRead: boolean;
+  onStoryClick: (id: number) => void;
+}) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const domain = extractDomain(story.url);
+
+  return (
+    <div
+      onClick={() => {
+        void markStoryRead(story.id, "detail");
+        onStoryClick(story.id);
+      }}
+      className="group w-full cursor-pointer rounded-md px-3 py-2.5 text-left transition-colors hover:bg-surface-hover"
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          void markStoryRead(story.id, "detail");
+          onStoryClick(story.id);
+        }
+      }}
+    >
+      <div className="flex items-baseline gap-2">
+        <div
+          className={`min-w-0 flex-1 break-words text-xl font-medium transition-colors ${
+            isRead
+              ? "text-fg/40 group-hover:text-accent"
+              : "text-fg/90 group-hover:text-accent"
+          }`}
+        >
+          {story.title}
+          {domain && (
+            <span
+              className={`ml-2 text-base font-normal text-fg-faint ${
+                menuOpen ? "!hidden" : ""
+              }`}
+            >
+              ({domain})
+            </span>
+          )}
+        </div>
+        <Popover.Root open={menuOpen} onOpenChange={setMenuOpen}>
+          <Popover.Trigger asChild>
+            <button
+              type="button"
+              onClick={(e) => e.stopPropagation()}
+              className={`shrink-0 self-center rounded p-0.5 text-fg-faint/60 transition-colors hover:text-accent hover:bg-accent-subtle ${
+                menuOpen
+                  ? "text-accent bg-accent-subtle opacity-100"
+                  : "sm:opacity-0 sm:group-hover:opacity-100"
+              }`}
+              aria-label="Story actions"
+            >
+              <DotsThreeVerticalIcon size={16} weight="bold" />
+            </button>
+          </Popover.Trigger>
+          <Popover.Portal>
+            <Popover.Content
+              align="end"
+              sideOffset={4}
+              className="z-50 min-w-40 overflow-hidden rounded-md border border-edge bg-surface p-1 text-fg shadow-xl shadow-black/10 animate-in fade-in-0 zoom-in-95"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {story.url && (
+                <button
+                  type="button"
+                  className="flex w-full items-center rounded-sm px-2 py-1.5 text-sm transition-colors hover:bg-accent-subtle hover:text-accent"
+                  onClick={() => {
+                    window.open(story.url, "_blank", "noopener,noreferrer");
+                    void markStoryRead(story.id, "external");
+                    setMenuOpen(false);
+                  }}
+                >
+                  Open original URL
+                </button>
+              )}
+              <button
+                type="button"
+                className="flex w-full items-center rounded-sm px-2 py-1.5 text-sm transition-colors hover:bg-accent-subtle hover:text-accent"
+                onClick={() => {
+                  void (isRead
+                    ? markStoryUnread(story.id)
+                    : markStoryRead(story.id, "manual"));
+                  setMenuOpen(false);
+                }}
+              >
+                {isRead ? "Mark as unread" : "Mark as read"}
+              </button>
+            </Popover.Content>
+          </Popover.Portal>
+        </Popover.Root>
+      </div>
+      <div
+        className={`mt-0.5 text-base ${isRead ? "text-fg-faint/85" : "text-fg-muted"}`}
+      >
+        {story.score} pts · {timeAgo(story.time)}
+        {story.descendants != null && ` · ${story.descendants} comments`}
+      </div>
+    </div>
+  );
+}
+
 const SUBMISSIONS_PER_PAGE = 15;
 
 export function UserProfile({ userId, onBack, onStoryClick }: Props) {
   const { data: user, isLoading } = useUser(userId);
   const showCounts = useStore($userProfileShowCount);
+  const readStoryIds = useStore($readStoryIds);
   const showCount = showCounts[userId] ?? SUBMISSIONS_PER_PAGE;
   const setShowCount = (action: number | ((c: number) => number)) => {
     const next = typeof action === "function" ? action(showCount) : action;
@@ -111,26 +224,17 @@ export function UserProfile({ userId, onBack, onStoryClick }: Props) {
             Recent Stories
           </h2>
           <div className="space-y-0.5">
-            {stories.map((story) => (
-              <button
-                key={story.id}
-                onClick={() => onStoryClick(story.id)}
-                className="w-full text-left px-3 py-2.5 rounded-md hover:bg-surface-hover transition-colors group"
-              >
-                <div className="break-words text-xl font-medium text-fg transition-colors group-hover:text-accent">
-                  {story.title}
-                  {story.url && (
-                    <span className="ml-2 text-base font-normal text-fg-faint">
-                      ({extractDomain(story.url)})
-                    </span>
-                  )}
-                </div>
-                <div className="mt-0.5 text-base text-fg-muted">
-                  {story.score} pts · {timeAgo(story.time)}
-                  {story.descendants != null && ` · ${story.descendants} comments`}
-                </div>
-              </button>
-            ))}
+            {stories.map((story) => {
+              const isRead = readStoryIds.has(story.id);
+              return (
+                <UserStoryItem
+                  key={story.id}
+                  story={story}
+                  isRead={isRead}
+                  onStoryClick={onStoryClick}
+                />
+              );
+            })}
           </div>
           <AutoLoadIndicator
             enabled={hasMoreSubmissions}

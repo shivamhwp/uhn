@@ -1,3 +1,6 @@
+import { clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+
 export function timeAgo(timestamp: number): string {
   const seconds = Math.floor(Date.now() / 1000 - timestamp);
   if (seconds < 60) return `${seconds}s`;
@@ -41,4 +44,8 @@ export function formatDate(timestamp: number): string {
 export function formatNumber(n: number): string {
   if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
   return String(n);
+}
+
+export function cn(...inputs: Parameters<typeof clsx>) {
+  return twMerge(clsx(...inputs));
 }

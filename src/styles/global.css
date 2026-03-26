@@ -49,6 +49,7 @@ html {
   overflow-x: hidden;
   overflow-x: clip;
   overflow-y: auto;
+  overscroll-behavior: none;
   scrollbar-gutter: stable;
   --comment-indent-step: clamp(0.6rem, 2.4vw, 1rem);
   --comment-indent-cap: clamp(3rem, 16vw, 6rem);
@@ -64,6 +65,7 @@ body {
   overflow-x: hidden;
   overflow-x: clip;
   overflow-y: auto;
+  overscroll-behavior: none;
 }
 
 /* Hide scrollbars globally while preserving scroll behavior */
@@ -171,7 +173,7 @@ body {
   overflow-y: auto;
   overflow-x: hidden;
   overflow-x: clip;
-  overscroll-behavior-y: contain;
+  overscroll-behavior: none;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y pinch-zoom;
 }
