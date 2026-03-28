@@ -275,7 +275,12 @@ const activeFeedLabel = activeFeed ? feedLabels[activeFeed] : "Feeds";
 
         function setRefreshing(isRefreshing) {
           if (refreshIcon) refreshIcon.classList.toggle('animate-spin', isRefreshing);
-          if (refreshButton) refreshButton.setAttribute('aria-busy', isRefreshing ? 'true' : 'false');
+          if (refreshButton) {
+            refreshButton.setAttribute('aria-busy', isRefreshing ? 'true' : 'false');
+            refreshButton.toggleAttribute('disabled', isRefreshing);
+            refreshButton.classList.toggle('pointer-events-none', isRefreshing);
+            refreshButton.classList.toggle('opacity-70', isRefreshing);
+          }
         }
 
         function closeMobileFeedMenu() {
@@ -332,8 +337,11 @@ const activeFeedLabel = activeFeed ? feedLabels[activeFeed] : "Feeds";
 
         if (refreshButton) {
           refreshButton.addEventListener('click', function() {
+            if (refreshButton.getAttribute('aria-busy') === 'true') return;
             setRefreshing(true);
-            window.dispatchEvent(new Event('uhn:refresh'));
+            requestAnimationFrame(function() {
+              window.dispatchEvent(new Event('uhn:refresh'));
+            });
           });
         }
         window.addEventListener('uhn:refresh:start', function() {

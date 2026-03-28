@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from "react";
 import { useEffect, useLayoutEffect } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useIsRestoring } from "@tanstack/react-query";
 import { useStore } from "@nanostores/react";
 import { Virtuoso } from "react-virtuoso";
 import type { VirtuosoHandle } from "react-virtuoso";
@@ -57,6 +57,7 @@ export function StoryList({
   const feedPages = useStore($feedPage);
   const readStoryIds = useStore($readStoryIds);
   const page = feedPages[feedType] ?? 0;
+  const [isListActive, setIsListActive] = useState(false);
   const setPage = useCallback(
     (action: number | ((p: number) => number)) => {
       const currentPage = $feedPage.get()[feedType] ?? 0;
@@ -67,6 +68,7 @@ export function StoryList({
   );
   const [selectedIndexState, setSelectedIndexState] = useState(0);
   const scrollRef = useRef<HTMLElement | null>(null);
+  const listRef = useRef<HTMLDivElement | null>(null);
   const virtuosoRef = useRef<VirtuosoHandle>(null);
   const hasRestoredScrollRef = useRef(false);
   const hasRestoredStoryAnchorRef = useRef(false);
@@ -80,7 +82,7 @@ export function StoryList({
   }
 
   const { toggle: toggleTheme } = useTheme();
-  const queryClient = useQueryClient();
+  const isRestoring = useIsRestoring();
   const prefetchItem = usePrefetchItem();
 
   const { data: allIds, isLoading: idsLoading } = useStoryIds(feedType);
@@ -104,6 +106,7 @@ export function StoryList({
       : stories.length === 0
         ? 0
         : Math.min(selectedIndexState, stories.length - 1);
+  const visibleSelectedIndex = isListActive ? selectedIndex : -1;
 
   const persistCurrentFeedPosition = useCallback(() => {
     saveFeedScroll(feedType, scrollRef.current?.scrollTop ?? 0);
@@ -225,8 +228,7 @@ export function StoryList({
     t: () => toggleTheme(),
     "?": () => onToggleShortcuts(),
     r: () => {
-      queryClient.invalidateQueries({ queryKey: ["storyIds"] });
-      queryClient.invalidateQueries({ queryKey: ["item"] });
+      window.dispatchEvent(new Event("uhn:refresh"));
     },
     "]": () => loadMore(),
     "[": () => {
@@ -262,56 +264,78 @@ export function StoryList({
     },
   });
 
-  if (idsLoading || isLoading) {
+  const showInitialLoading =
+    !isRestoring && stories.length === 0 && (!allIds?.length || idsLoading || isLoading);
+
+  if (showInitialLoading) {
     return <LoadingNotice className="py-16 animate-fade" />;
   }
 
   return (
-    <Virtuoso
-      ref={virtuosoRef}
-      className="app-scroll flex-1"
-      style={{ height: "100%" }}
-      data={stories}
-      computeItemKey={(_, story) => story.id}
-      scrollerRef={(ref) => {
-        scrollRef.current = ref instanceof HTMLElement ? ref : null;
-      }}
-      increaseViewportBy={{ top: 80, bottom: 220 }}
-      overscan={320}
-      rangeChanged={({ endIndex }) => {
-        if (endIndex >= stories.length - 5) {
-          loadMore();
+    <div
+      ref={listRef}
+      className="flex min-h-0 flex-1"
+      onMouseEnter={() => setIsListActive(true)}
+      onMouseLeave={() => {
+        if (!listRef.current?.contains(document.activeElement)) {
+          setIsListActive(false);
         }
       }}
-      components={{
-        Footer: () => (hasMore || isLoadingMore ? <LoadingNotice className="py-6" /> : null),
+      onFocus={() => setIsListActive(true)}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+          setIsListActive(false);
+        }
       }}
-      itemContent={(index, story) => (
-        <StoryItem
-          story={story}
-          rank={index + 1}
-          isSelected={index === selectedIndex}
-          isRead={readStoryIds.has(story.id)}
-          onClick={() => {
-            void markStoryRead(story.id, "detail");
-            $activeStory.set({ feedType, storyId: story.id });
-            persistCurrentFeedPosition();
-            onStoryClick(story.id);
-          }}
-          onHover={() => {
-            setSelectedIndexState(index);
-            $activeStory.set({ feedType, storyId: story.id });
-          }}
-          onUserClick={(id) => {
-            persistCurrentFeedPosition();
-            onUserClick(id);
-          }}
-          onPrefetch={() => prefetchItem(story.id)}
-          onOpenExternal={() => {
-            void markStoryRead(story.id, "external");
-          }}
-        />
-      )}
-    />
+    >
+      <Virtuoso
+        ref={virtuosoRef}
+        className="app-scroll flex-1"
+        style={{ height: "100%" }}
+        data={stories}
+        computeItemKey={(_, story) => story.id}
+        scrollerRef={(ref) => {
+          scrollRef.current = ref instanceof HTMLElement ? ref : null;
+        }}
+        increaseViewportBy={{ top: 80, bottom: 220 }}
+        overscan={320}
+        rangeChanged={({ endIndex }) => {
+          if (endIndex >= stories.length - 5) {
+            loadMore();
+          }
+        }}
+        components={{
+          Footer: () => (hasMore || isLoadingMore ? <LoadingNotice className="py-6" /> : null),
+        }}
+        itemContent={(index, story) => (
+          <StoryItem
+            story={story}
+            rank={index + 1}
+            isSelected={index === visibleSelectedIndex}
+            isRead={readStoryIds.has(story.id)}
+            onClick={() => {
+              setIsListActive(true);
+              void markStoryRead(story.id, "detail");
+              $activeStory.set({ feedType, storyId: story.id });
+              persistCurrentFeedPosition();
+              onStoryClick(story.id);
+            }}
+            onHover={() => {
+              setIsListActive(true);
+              setSelectedIndexState(index);
+              $activeStory.set({ feedType, storyId: story.id });
+            }}
+            onUserClick={(id) => {
+              persistCurrentFeedPosition();
+              onUserClick(id);
+            }}
+            onPrefetch={() => prefetchItem(story.id)}
+            onOpenExternal={() => {
+              void markStoryRead(story.id, "external");
+            }}
+          />
+        )}
+      />
+    </div>
   );
 }

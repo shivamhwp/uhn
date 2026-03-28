@@ -206,6 +206,24 @@ body {
   }
 }
 
+@keyframes uhnSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes uhnCowMarquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(-50% - 0.25rem));
+  }
+}
+
 @keyframes shimmer {
   0% {
     background-position: -200% 0;
@@ -238,4 +256,48 @@ body {
 ::selection {
   background-color: var(--color-accent);
   color: white;
+}
+
+[data-sonner-toaster] {
+  --normal-bg: var(--color-surface);
+  --normal-bg-hover: var(--color-surface-hover);
+  --normal-border: var(--color-edge);
+  --normal-border-hover: var(--color-edge);
+  --normal-text: var(--color-fg);
+  --success-bg: var(--color-accent-subtle);
+  --success-border: var(--color-edge);
+  --success-text: var(--color-accent);
+  --info-bg: var(--color-surface);
+  --info-border: var(--color-edge);
+  --info-text: var(--color-fg);
+  --warning-bg: var(--color-surface);
+  --warning-border: var(--color-edge);
+  --warning-text: var(--color-fg);
+  --error-bg: var(--color-surface);
+  --error-border: var(--color-danger);
+  --error-text: var(--color-danger);
+  font-family: var(--font-sans);
+}
+
+[data-sonner-toast][data-styled="true"] {
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--color-bg) 60%, transparent);
+}
+
+[data-sonner-toast][data-styled="true"] [data-description] {
+  color: var(--color-fg-muted);
+}
+
+[data-rich-colors="true"][data-sonner-toast][data-type="success"] [data-description] {
+  color: var(--color-fg);
+}
+
+[data-sonner-toast][data-styled="true"] [data-close-button] {
+  background: var(--color-surface);
+  border-color: var(--color-edge);
+  color: var(--color-fg);
+}
+
+[data-sonner-toast][data-styled="true"]:hover [data-close-button]:hover {
+  background: var(--color-surface-hover);
+  border-color: var(--color-edge);
 }
