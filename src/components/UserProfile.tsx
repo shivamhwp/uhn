@@ -1,6 +1,12 @@
 import { useState } from "react";
 import { useStore } from "@nanostores/react";
-import { ArrowLeftIcon, CalendarIcon, LightningIcon, ArticleIcon, DotsThreeVerticalIcon } from "@phosphor-icons/react";
+import {
+  ArrowLeftIcon,
+  CalendarIcon,
+  LightningIcon,
+  ArticleIcon,
+  DotsThreeVerticalIcon,
+} from "@phosphor-icons/react";
 import * as Popover from "@radix-ui/react-popover";
 import { useUser } from "../lib/hooks";
 import { formatDate, timeAgo, extractDomain } from "../lib/utils";
@@ -50,17 +56,13 @@ function UserStoryItem({
       <div className="flex items-baseline gap-2">
         <div
           className={`min-w-0 flex-1 break-words text-xl font-medium transition-colors ${
-            isRead
-              ? "text-fg/40 group-hover:text-accent"
-              : "text-fg/90 group-hover:text-accent"
+            isRead ? "text-fg/40 group-hover:text-accent" : "text-fg/90 group-hover:text-accent"
           }`}
         >
           {story.title}
           {domain && (
             <span
-              className={`ml-2 text-base font-normal text-fg-faint ${
-                menuOpen ? "!hidden" : ""
-              }`}
+              className={`ml-2 text-base font-normal text-fg-faint ${menuOpen ? "!hidden" : ""}`}
             >
               ({domain})
             </span>
@@ -105,9 +107,7 @@ function UserStoryItem({
                 type="button"
                 className="flex w-full items-center rounded-sm px-2 py-1.5 text-sm transition-colors hover:bg-accent-subtle hover:text-accent"
                 onClick={() => {
-                  void (isRead
-                    ? markStoryUnread(story.id)
-                    : markStoryRead(story.id, "manual"));
+                  void (isRead ? markStoryUnread(story.id) : markStoryRead(story.id, "manual"));
                   setMenuOpen(false);
                 }}
               >
@@ -117,9 +117,7 @@ function UserStoryItem({
           </Popover.Portal>
         </Popover.Root>
       </div>
-      <div
-        className={`mt-0.5 text-base ${isRead ? "text-fg-faint/85" : "text-fg-muted"}`}
-      >
+      <div className={`mt-0.5 text-base ${isRead ? "text-fg-faint/85" : "text-fg-muted"}`}>
         {story.score} pts · {timeAgo(story.time)}
         {story.descendants != null && ` · ${story.descendants} comments`}
       </div>

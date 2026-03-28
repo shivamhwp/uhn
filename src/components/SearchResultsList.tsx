@@ -10,7 +10,6 @@ import { $readStoryIds, markStoryRead, markStoryUnread } from "../lib/read-stori
 import type { SearchFilters } from "../lib/types";
 import { LoadingNotice } from "./LoadingNotice";
 
-
 function SearchResultItem({
   hit,
   index,
@@ -20,7 +19,15 @@ function SearchResultItem({
   onStoryClick,
   onUserClick,
 }: {
-  hit: { objectID: string; title: string; url?: string; points: number; author: string; created_at_i: number; num_comments: number };
+  hit: {
+    objectID: string;
+    title: string;
+    url?: string;
+    points: number;
+    author: string;
+    created_at_i: number;
+    num_comments: number;
+  };
   index: number;
   page: number;
   isSelected: boolean;
@@ -123,9 +130,7 @@ function SearchResultItem({
                   type="button"
                   className="flex w-full items-center rounded-sm px-2 py-1.5 text-sm transition-colors hover:bg-accent-subtle hover:text-accent"
                   onClick={() => {
-                    void (isRead
-                      ? markStoryUnread(storyId)
-                      : markStoryRead(storyId, "manual"));
+                    void (isRead ? markStoryUnread(storyId) : markStoryRead(storyId, "manual"));
                     setMenuOpen(false);
                   }}
                 >

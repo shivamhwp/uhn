@@ -1,8 +1,9 @@
 import { useState, useCallback, useRef } from "react";
 import { useEffect, useLayoutEffect } from "react";
-import { useVirtualizer } from "@tanstack/react-virtual";
 import { useQueryClient } from "@tanstack/react-query";
 import { useStore } from "@nanostores/react";
+import { Virtuoso } from "react-virtuoso";
+import type { VirtuosoHandle } from "react-virtuoso";
 import { useStoryIds, useStoriesPage, usePrefetchItem, ITEMS_PER_PAGE } from "../lib/hooks";
 import { feedPath } from "../lib/feeds";
 import { useTheme } from "./ThemeProvider";
@@ -21,8 +22,6 @@ interface Props {
   onSearch: () => void;
   onToggleShortcuts: () => void;
 }
-
-const STORY_ROW_HEIGHT = 96;
 
 const feedScrollTop = new Map<FeedType, number>();
 const getFeedScrollStorageKey = (feedType: FeedType) => `uhn:feed-scroll:${feedType}`;
@@ -67,18 +66,19 @@ export function StoryList({
     [feedType],
   );
   const [selectedIndexState, setSelectedIndexState] = useState(0);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLElement | null>(null);
+  const virtuosoRef = useRef<VirtuosoHandle>(null);
   const hasRestoredScrollRef = useRef(false);
   const hasRestoredStoryAnchorRef = useRef(false);
   const autoLoadPendingRef = useRef(false);
   const prevFeedTypeRef = useRef(feedType);
 
-  // Reset restoration flags when feed changes so scroll is re-applied per feed
   if (prevFeedTypeRef.current !== feedType) {
     prevFeedTypeRef.current = feedType;
     hasRestoredScrollRef.current = false;
     hasRestoredStoryAnchorRef.current = false;
   }
+
   const { toggle: toggleTheme } = useTheme();
   const queryClient = useQueryClient();
   const prefetchItem = usePrefetchItem();
@@ -89,12 +89,14 @@ export function StoryList({
   const hasMore = page < totalPages - 1;
 
   const loadMore = useCallback(() => {
-    if (hasMore) setPage((p) => p + 1);
-  }, [hasMore, setPage]);
+    if (!hasMore || isLoadingMore || autoLoadPendingRef.current) return;
+    autoLoadPendingRef.current = true;
+    setPage((p) => p + 1);
+  }, [hasMore, isLoadingMore, setPage]);
 
   const restoredIndex =
     activeStory?.feedType === feedType
-      ? stories.findIndex((s) => s.id === activeStory.storyId)
+      ? stories.findIndex((story) => story.id === activeStory.storyId)
       : -1;
   const selectedIndex =
     restoredIndex >= 0
@@ -103,23 +105,14 @@ export function StoryList({
         ? 0
         : Math.min(selectedIndexState, stories.length - 1);
 
-  const setSelectedIndex = setSelectedIndexState;
-
-  const virtualizer = useVirtualizer({
-    count: stories.length,
-    getScrollElement: () => scrollRef.current,
-    getItemKey: (index) => stories[index]?.id ?? index,
-    estimateSize: () => STORY_ROW_HEIGHT,
-    overscan: 5,
-    scrollPaddingStart: 80,
-    scrollPaddingEnd: 220,
-  });
-
   const persistCurrentFeedPosition = useCallback(() => {
     saveFeedScroll(feedType, scrollRef.current?.scrollTop ?? 0);
   }, [feedType]);
 
-  // Keep refs updated for pagehide (runs during unload when closure may be stale)
+  const scrollSelectedStoryIntoView = useCallback((index: number) => {
+    virtuosoRef.current?.scrollIntoView({ index, behavior: "auto" });
+  }, []);
+
   const feedTypeRef = useRef(feedType);
   feedTypeRef.current = feedType;
 
@@ -149,7 +142,7 @@ export function StoryList({
     if (!isLoadingMore) {
       autoLoadPendingRef.current = false;
     }
-  }, [isLoadingMore]);
+  }, [isLoadingMore, page, stories.length]);
 
   useLayoutEffect(() => {
     if (hasRestoredScrollRef.current || idsLoading || isLoading || isLoadingMore) return;
@@ -159,14 +152,10 @@ export function StoryList({
     if (savedTop == null) return;
 
     hasRestoredScrollRef.current = true;
-    const el = scrollRef.current;
-    if (!el) return;
-
-    const restore = () => {
-      el.scrollTop = savedTop;
-    };
     requestAnimationFrame(() => {
-      requestAnimationFrame(restore);
+      requestAnimationFrame(() => {
+        scrollRef.current?.scrollTo({ top: savedTop, behavior: "auto" });
+      });
     });
   }, [feedType, idsLoading, isLoading, isLoadingMore, stories.length]);
 
@@ -178,41 +167,41 @@ export function StoryList({
     hasRestoredStoryAnchorRef.current = true;
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        virtualizer.scrollToIndex(restoredIndex, { align: "center", behavior: "auto" });
+        virtuosoRef.current?.scrollToIndex({ index: restoredIndex, align: "center" });
       });
     });
-  }, [idsLoading, isLoading, isLoadingMore, restoredIndex, stories.length, virtualizer]);
+  }, [idsLoading, isLoading, isLoadingMore, restoredIndex, stories.length]);
 
   useHotkeys({
     j: () => {
       const next = Math.min(selectedIndex + 1, stories.length - 1);
-      if (next >= stories.length - 3 && hasMore) loadMore();
-      setSelectedIndex(next);
+      if (next >= stories.length - 3) loadMore();
+      setSelectedIndexState(next);
       const nextStory = stories[next];
       if (nextStory) $activeStory.set({ feedType, storyId: nextStory.id });
-      virtualizer.scrollToIndex(next, { align: "auto", behavior: "auto" });
+      scrollSelectedStoryIntoView(next);
     },
     ArrowDown: () => {
       const next = Math.min(selectedIndex + 1, stories.length - 1);
-      if (next >= stories.length - 3 && hasMore) loadMore();
-      setSelectedIndex(next);
+      if (next >= stories.length - 3) loadMore();
+      setSelectedIndexState(next);
       const nextStory = stories[next];
       if (nextStory) $activeStory.set({ feedType, storyId: nextStory.id });
-      virtualizer.scrollToIndex(next, { align: "auto", behavior: "auto" });
+      scrollSelectedStoryIntoView(next);
     },
     k: () => {
       const prev = Math.max(selectedIndex - 1, 0);
-      setSelectedIndex(prev);
+      setSelectedIndexState(prev);
       const prevStory = stories[prev];
       if (prevStory) $activeStory.set({ feedType, storyId: prevStory.id });
-      virtualizer.scrollToIndex(prev, { align: "auto", behavior: "auto" });
+      scrollSelectedStoryIntoView(prev);
     },
     ArrowUp: () => {
       const prev = Math.max(selectedIndex - 1, 0);
-      setSelectedIndex(prev);
+      setSelectedIndexState(prev);
       const prevStory = stories[prev];
       if (prevStory) $activeStory.set({ feedType, storyId: prevStory.id });
-      virtualizer.scrollToIndex(prev, { align: "auto", behavior: "auto" });
+      scrollSelectedStoryIntoView(prev);
     },
     Enter: () => {
       if (stories[selectedIndex]) {
@@ -243,7 +232,7 @@ export function StoryList({
     "[": () => {
       if (page > 0) {
         setPage((p) => p - 1);
-        setSelectedIndex(0);
+        setSelectedIndexState(0);
         scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
       }
     },
@@ -273,77 +262,56 @@ export function StoryList({
     },
   });
 
-  const virtualItems = virtualizer.getVirtualItems();
-  const lastVisibleIndex = virtualItems.at(-1)?.index ?? -1;
-
-  useEffect(() => {
-    if (!hasMore || isLoadingMore || autoLoadPendingRef.current) return;
-    if (lastVisibleIndex < stories.length - 5) return;
-
-    autoLoadPendingRef.current = true;
-    loadMore();
-  }, [hasMore, isLoadingMore, lastVisibleIndex, loadMore, stories.length]);
-
   if (idsLoading || isLoading) {
     return <LoadingNotice className="py-16 animate-fade" />;
   }
 
   return (
-    <div ref={scrollRef} className="app-scroll flex-1">
-      {/* Virtualized story list */}
-      <div
-        style={{
-          height: virtualizer.getTotalSize(),
-          width: "100%",
-          position: "relative",
-        }}
-      >
-        {virtualItems.map((virtualRow) => {
-          const story = stories[virtualRow.index];
-          if (!story) return null;
-          const i = virtualRow.index;
-          return (
-            <div
-              key={story.id}
-              data-index={virtualRow.index}
-              ref={virtualizer.measureElement}
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                width: "100%",
-                transform: `translateY(${virtualRow.start}px)`,
-              }}
-            >
-              <StoryItem
-                story={story}
-                rank={i + 1}
-                isSelected={i === selectedIndex}
-                isRead={readStoryIds.has(story.id)}
-                onClick={() => {
-                  void markStoryRead(story.id, "detail");
-                  $activeStory.set({ feedType, storyId: story.id });
-                  persistCurrentFeedPosition();
-                  onStoryClick(story.id);
-                }}
-                onHover={() => {
-                  setSelectedIndex(i);
-                  $activeStory.set({ feedType, storyId: story.id });
-                }}
-                onUserClick={(id) => {
-                  persistCurrentFeedPosition();
-                  onUserClick(id);
-                }}
-                onPrefetch={() => prefetchItem(story.id)}
-                onOpenExternal={() => {
-                  void markStoryRead(story.id, "external");
-                }}
-              />
-            </div>
-          );
-        })}
-      </div>
-      {(hasMore || isLoadingMore) && <LoadingNotice className="py-6" />}
-    </div>
+    <Virtuoso
+      ref={virtuosoRef}
+      className="app-scroll flex-1"
+      style={{ height: "100%" }}
+      data={stories}
+      computeItemKey={(_, story) => story.id}
+      scrollerRef={(ref) => {
+        scrollRef.current = ref instanceof HTMLElement ? ref : null;
+      }}
+      increaseViewportBy={{ top: 80, bottom: 220 }}
+      overscan={320}
+      rangeChanged={({ endIndex }) => {
+        if (endIndex >= stories.length - 5) {
+          loadMore();
+        }
+      }}
+      components={{
+        Footer: () => (hasMore || isLoadingMore ? <LoadingNotice className="py-6" /> : null),
+      }}
+      itemContent={(index, story) => (
+        <StoryItem
+          story={story}
+          rank={index + 1}
+          isSelected={index === selectedIndex}
+          isRead={readStoryIds.has(story.id)}
+          onClick={() => {
+            void markStoryRead(story.id, "detail");
+            $activeStory.set({ feedType, storyId: story.id });
+            persistCurrentFeedPosition();
+            onStoryClick(story.id);
+          }}
+          onHover={() => {
+            setSelectedIndexState(index);
+            $activeStory.set({ feedType, storyId: story.id });
+          }}
+          onUserClick={(id) => {
+            persistCurrentFeedPosition();
+            onUserClick(id);
+          }}
+          onPrefetch={() => prefetchItem(story.id)}
+          onOpenExternal={() => {
+            void markStoryRead(story.id, "external");
+          }}
+        />
+      )}
+    />
   );
 }

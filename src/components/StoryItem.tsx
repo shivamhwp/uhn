@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { DotsThreeVerticalIcon, ChatCircleIcon, ArrowFatUpIcon } from "@phosphor-icons/react";
 import * as Popover from "@radix-ui/react-popover";
-import { timeAgo, extractDomain } from "../lib/utils";
+import { timeAgo } from "../lib/utils";
 import { markStoryRead, markStoryUnread } from "../lib/read-stories";
 import type { HNItem } from "../lib/types";
 
@@ -33,7 +33,6 @@ export const StoryItem = React.forwardRef<HTMLDivElement, Props>(function StoryI
   },
   ref,
 ) {
-  const domain = extractDomain(story.url);
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -84,7 +83,6 @@ export const StoryItem = React.forwardRef<HTMLDivElement, Props>(function StoryI
           >
             {story.title}
           </h3>
-
         </div>
 
         {/* Meta row */}
@@ -129,50 +127,46 @@ export const StoryItem = React.forwardRef<HTMLDivElement, Props>(function StoryI
               type="button"
               onClick={(e) => e.stopPropagation()}
               className={`cursor-pointer text-fg-faint/60 transition-colors hover:text-accent ${
-                menuOpen
-                  ? "text-accent opacity-100"
-                  : "sm:opacity-0 sm:group-hover:opacity-100"
+                menuOpen ? "text-accent opacity-100" : "sm:opacity-0 sm:group-hover:opacity-100"
               }`}
               aria-label="Story actions"
             >
               <DotsThreeVerticalIcon size={28} weight="bold" />
             </button>
           </Popover.Trigger>
-        <Popover.Portal>
-          <Popover.Content
-            side="bottom"
-            align="end"
-            sideOffset={2}
-            className="z-50 min-w-40 overflow-hidden rounded-md border border-edge bg-surface p-1 text-fg shadow-xl shadow-black/10 animate-in fade-in-0 zoom-in-95"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {story.url && (
+          <Popover.Portal>
+            <Popover.Content
+              side="bottom"
+              align="end"
+              sideOffset={2}
+              className="z-50 min-w-40 overflow-hidden rounded-md border border-edge bg-surface p-1 text-fg shadow-xl shadow-black/10 animate-in fade-in-0 zoom-in-95"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {story.url && (
+                <button
+                  type="button"
+                  className="flex w-full items-center rounded-sm px-2 py-1.5 text-sm transition-colors hover:bg-accent-subtle hover:text-accent"
+                  onClick={() => {
+                    window.open(story.url, "_blank", "noopener,noreferrer");
+                    onOpenExternal();
+                    setMenuOpen(false);
+                  }}
+                >
+                  Open original URL
+                </button>
+              )}
               <button
                 type="button"
                 className="flex w-full items-center rounded-sm px-2 py-1.5 text-sm transition-colors hover:bg-accent-subtle hover:text-accent"
                 onClick={() => {
-                  window.open(story.url, "_blank", "noopener,noreferrer");
-                  onOpenExternal();
+                  void (isRead ? markStoryUnread(story.id) : markStoryRead(story.id, "manual"));
                   setMenuOpen(false);
                 }}
               >
-                Open original URL
+                {isRead ? "Mark as unread" : "Mark as read"}
               </button>
-            )}
-            <button
-              type="button"
-              className="flex w-full items-center rounded-sm px-2 py-1.5 text-sm transition-colors hover:bg-accent-subtle hover:text-accent"
-              onClick={() => {
-                void (isRead
-                  ? markStoryUnread(story.id)
-                  : markStoryRead(story.id, "manual"));
-                setMenuOpen(false);
-              }}
-            >
-              {isRead ? "Mark as unread" : "Mark as read"}
-            </button>
-          </Popover.Content>
-        </Popover.Portal>
+            </Popover.Content>
+          </Popover.Portal>
         </Popover.Root>
       </div>
     </div>
