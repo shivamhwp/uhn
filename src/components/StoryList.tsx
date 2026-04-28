@@ -9,6 +9,7 @@ import { feedPath } from "../lib/feeds";
 import { useTheme } from "./ThemeProvider";
 import { $activeStory, $feedPage } from "../lib/stores";
 import { useHotkeys } from "../lib/useHotkeys";
+import { resolveStoryOpenUrl } from "../lib/utils";
 import { $readStoryIds, markStoryRead } from "../lib/read-stories";
 import { StoryItem } from "./StoryItem";
 import { LoadingNotice } from "./LoadingNotice";
@@ -57,7 +58,6 @@ export function StoryList({
   const feedPages = useStore($feedPage);
   const readStoryIds = useStore($readStoryIds);
   const page = feedPages[feedType] ?? 0;
-  const [isListActive, setIsListActive] = useState(false);
   const setPage = useCallback(
     (action: number | ((p: number) => number)) => {
       const currentPage = $feedPage.get()[feedType] ?? 0;
@@ -106,8 +106,6 @@ export function StoryList({
       : stories.length === 0
         ? 0
         : Math.min(selectedIndexState, stories.length - 1);
-  const visibleSelectedIndex = isListActive ? selectedIndex : -1;
-
   const persistCurrentFeedPosition = useCallback(() => {
     saveFeedScroll(feedType, scrollRef.current?.scrollTop ?? 0);
   }, [feedType]);
@@ -216,10 +214,9 @@ export function StoryList({
     },
     o: () => {
       const story = stories[selectedIndex];
-      if (story?.url) {
-        void markStoryRead(story.id, "external");
-        window.open(story.url, "_blank", "noopener,noreferrer");
-      }
+      if (!story) return;
+      void markStoryRead(story.id, "external");
+      window.open(resolveStoryOpenUrl(story), "_blank", "noopener,noreferrer");
     },
     "/": () => {
       persistCurrentFeedPosition();
@@ -272,22 +269,7 @@ export function StoryList({
   }
 
   return (
-    <div
-      ref={listRef}
-      className="flex min-h-0 flex-1"
-      onMouseEnter={() => setIsListActive(true)}
-      onMouseLeave={() => {
-        if (!listRef.current?.contains(document.activeElement)) {
-          setIsListActive(false);
-        }
-      }}
-      onFocus={() => setIsListActive(true)}
-      onBlur={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
-          setIsListActive(false);
-        }
-      }}
-    >
+    <div ref={listRef} className="flex min-h-0 flex-1">
       <Virtuoso
         ref={virtuosoRef}
         className="app-scroll flex-1"
@@ -311,17 +293,15 @@ export function StoryList({
           <StoryItem
             story={story}
             rank={index + 1}
-            isSelected={index === visibleSelectedIndex}
+            isSelected={index === selectedIndex}
             isRead={readStoryIds.has(story.id)}
             onClick={() => {
-              setIsListActive(true);
               void markStoryRead(story.id, "detail");
               $activeStory.set({ feedType, storyId: story.id });
               persistCurrentFeedPosition();
               onStoryClick(story.id);
             }}
             onHover={() => {
-              setIsListActive(true);
               setSelectedIndexState(index);
               $activeStory.set({ feedType, storyId: story.id });
             }}

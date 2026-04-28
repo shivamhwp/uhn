@@ -3,7 +3,7 @@ import { useStore } from "@nanostores/react";
 import { DotsThreeVerticalIcon, CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react";
 import * as Popover from "@radix-ui/react-popover";
 import { useSearch } from "../lib/hooks";
-import { extractDomain, timeAgo } from "../lib/utils";
+import { extractDomain, resolveStoryOpenUrl, timeAgo } from "../lib/utils";
 import { $searchPage, setSearchPageEntry } from "../lib/stores";
 import { useHotkeys } from "../lib/useHotkeys";
 import { $readStoryIds, markStoryRead, markStoryUnread } from "../lib/read-stories";
@@ -203,6 +203,13 @@ export function SearchResultsList({ query, onStoryClick, onUserClick }: Props) {
       if (!hit) return;
       void markStoryRead(Number(hit.objectID), "detail");
       onStoryClick(Number(hit.objectID));
+    },
+    o: () => {
+      const hit = hits[selectedIndex];
+      if (!hit) return;
+      const id = Number(hit.objectID);
+      void markStoryRead(id, "external");
+      window.open(resolveStoryOpenUrl({ id, url: hit.url }), "_blank", "noopener,noreferrer");
     },
     "[": () => {
       if (page > 0) {

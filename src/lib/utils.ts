@@ -1,5 +1,6 @@
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import type { HNItem } from "./types";
 
 export function timeAgo(timestamp: number): string {
   const seconds = Math.floor(Date.now() / 1000 - timestamp);
@@ -22,6 +23,13 @@ export function extractDomain(url?: string): string | null {
   } catch {
     return null;
   }
+}
+
+/** Article URL, or the story page when there is no outbound link (Ask HN, Show HN text, etc.). */
+export function resolveStoryOpenUrl(story: Pick<HNItem, "id" | "url">): string {
+  const raw = story.url?.trim();
+  if (raw) return raw;
+  return new URL(`/item?id=${story.id}`, window.location.origin).href;
 }
 
 export function pluralize(n: number, singular: string, plural?: string): string {

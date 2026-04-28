@@ -9,7 +9,7 @@ import {
 import { useItem } from "../lib/hooks";
 import type { HNItem } from "../lib/types";
 import { useTheme } from "./ThemeProvider";
-import { timeAgo, extractDomain, formatDate } from "../lib/utils";
+import { timeAgo, extractDomain, formatDate, resolveStoryOpenUrl } from "../lib/utils";
 import { useHotkeys } from "../lib/useHotkeys";
 import { CommentTree } from "./CommentTree";
 import { LoadingNotice } from "./LoadingNotice";
@@ -37,7 +37,10 @@ export function StoryDetail({
     h: () => onBack(),
     Escape: () => onBack(),
     Backspace: () => onBack(),
-    o: () => story?.url && window.open(story.url, "_blank", "noopener,noreferrer"),
+    o: () => {
+      if (!story) return;
+      window.open(resolveStoryOpenUrl(story), "_blank", "noopener,noreferrer");
+    },
     t: () => toggleTheme(),
   });
 
