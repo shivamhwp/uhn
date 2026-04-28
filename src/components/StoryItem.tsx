@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { DotsThreeVerticalIcon, ChatCircleIcon, ArrowFatUpIcon } from "@phosphor-icons/react";
 import * as Popover from "@radix-ui/react-popover";
-import { timeAgo } from "../lib/utils";
+import { timeAgo, openUrlInNewTab } from "../lib/utils";
 import { markStoryRead, markStoryUnread } from "../lib/read-stories";
 import type { HNItem } from "../lib/types";
 
@@ -147,7 +147,7 @@ export const StoryItem = React.forwardRef<HTMLDivElement, Props>(function StoryI
                   type="button"
                   className="flex w-full items-center rounded-sm px-2 py-1.5 text-sm transition-colors hover:bg-accent-subtle hover:text-accent"
                   onClick={() => {
-                    window.open(story.url, "_blank", "noopener,noreferrer");
+                    openUrlInNewTab(story.url!);
                     onOpenExternal();
                     setMenuOpen(false);
                   }}

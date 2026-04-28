@@ -1,4 +1,4 @@
-const CACHE_NAME = "uhn-v3";
+const CACHE_NAME = "uhn-v5";
 
 const PRECACHE_URLS = ["/favicon.svg", "/manifest.json"];
 
@@ -31,18 +31,9 @@ self.addEventListener("fetch", (event) => {
   const isNavigation = request.mode === "navigate" || request.destination === "document";
   const isAstroBuildAsset = url.pathname.startsWith("/_astro/");
 
-  // Always prefer fresh HTML so we don't serve pages that reference old hashed /_astro assets.
+  // Always use fresh HTML (no cache.put — cloning here races the navigation Response body).
   if (isNavigation) {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          if (response.ok) {
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, response.clone()));
-          }
-          return response;
-        })
-        .catch(() => caches.match(request)),
-    );
+    event.respondWith(fetch(request).catch(() => caches.match(request)));
     return;
   }
 
@@ -54,14 +45,17 @@ self.addEventListener("fetch", (event) => {
 
   // Cache-first for other non-document same-origin resources.
   event.respondWith(
-    caches.match(request).then((cached) => {
+    caches.match(request).then(async (cached) => {
       if (cached) return cached;
-      return fetch(request).then((response) => {
-        if (response.ok) {
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, response.clone()));
-        }
-        return response;
-      });
+      const response = await fetch(request);
+      if (!response.ok) return response;
+      try {
+        const cache = await caches.open(CACHE_NAME);
+        await cache.put(request, response.clone());
+      } catch {
+        // Ignore clone / quota failures — still return the live response.
+      }
+      return response;
     }),
   );
 });

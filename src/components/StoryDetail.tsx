@@ -9,7 +9,13 @@ import {
 import { useItem } from "../lib/hooks";
 import type { HNItem } from "../lib/types";
 import { useTheme } from "./ThemeProvider";
-import { timeAgo, extractDomain, formatDate, resolveStoryOpenUrl } from "../lib/utils";
+import {
+  timeAgo,
+  extractDomain,
+  formatDate,
+  resolveStoryOpenUrl,
+  openUrlInNewTab,
+} from "../lib/utils";
 import { useHotkeys } from "../lib/useHotkeys";
 import { CommentTree } from "./CommentTree";
 import { LoadingNotice } from "./LoadingNotice";
@@ -39,7 +45,7 @@ export function StoryDetail({
     Backspace: () => onBack(),
     o: () => {
       if (!story) return;
-      window.open(resolveStoryOpenUrl(story), "_blank", "noopener,noreferrer");
+      openUrlInNewTab(resolveStoryOpenUrl(story));
     },
     t: () => toggleTheme(),
   });

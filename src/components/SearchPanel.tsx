@@ -10,7 +10,13 @@ import {
   CaretRightIcon,
 } from "@phosphor-icons/react";
 import { useSearch } from "../lib/hooks";
-import { timeAgo, extractDomain, isInputFocused, resolveStoryOpenUrl } from "../lib/utils";
+import {
+  timeAgo,
+  extractDomain,
+  isInputFocused,
+  resolveStoryOpenUrl,
+  openUrlInNewTab,
+} from "../lib/utils";
 import { useTheme } from "./ThemeProvider";
 import type { SearchFilters } from "../lib/types";
 import { useHotkeys } from "../lib/useHotkeys";
@@ -74,11 +80,7 @@ export function SearchPanel({ onStoryClick, onUserClick, onBack }: Props) {
     o: runWhenListFocused(() => {
       const hit = hits[selectedIndex];
       if (!hit) return;
-      window.open(
-        resolveStoryOpenUrl({ id: Number(hit.objectID), url: hit.url }),
-        "_blank",
-        "noopener,noreferrer",
-      );
+      openUrlInNewTab(resolveStoryOpenUrl({ id: Number(hit.objectID), url: hit.url }));
     }),
     "/": runWhenListFocused(() => inputRef.current?.focus()),
     h: runWhenListFocused(onBack),

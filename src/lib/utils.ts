@@ -32,6 +32,21 @@ export function resolveStoryOpenUrl(story: Pick<HNItem, "id" | "url">): string {
   return new URL(`/item?id=${story.id}`, window.location.origin).href;
 }
 
+/** Opens in a new tab via a real <a> click (display:none breaks activation in several browsers). */
+export function openUrlInNewTab(url: string): void {
+  const a = document.createElement("a");
+  a.href = url;
+  a.target = "_blank";
+  a.rel = "noopener noreferrer";
+  a.referrerPolicy = "no-referrer";
+  a.setAttribute("aria-hidden", "true");
+  a.tabIndex = -1;
+  a.style.cssText = "position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0.01";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
 export function pluralize(n: number, singular: string, plural?: string): string {
   return n === 1 ? `${n} ${singular}` : `${n} ${plural ?? singular + "s"}`;
 }

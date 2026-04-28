@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { markStoryRead, markStoryUnread } from "../lib/read-stories";
+import { openUrlInNewTab } from "../lib/utils";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -24,7 +25,7 @@ export function ReadStoryContextMenu({ storyId, isRead, storyUrl, children }: Pr
           <>
             <ContextMenuItem
               onSelect={() => {
-                window.open(storyUrl, "_blank", "noopener,noreferrer");
+                openUrlInNewTab(storyUrl);
               }}
             >
               Open original URL

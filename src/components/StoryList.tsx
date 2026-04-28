@@ -9,7 +9,7 @@ import { feedPath } from "../lib/feeds";
 import { useTheme } from "./ThemeProvider";
 import { $activeStory, $feedPage } from "../lib/stores";
 import { useHotkeys } from "../lib/useHotkeys";
-import { resolveStoryOpenUrl } from "../lib/utils";
+import { resolveStoryOpenUrl, openUrlInNewTab } from "../lib/utils";
 import { $readStoryIds, markStoryRead } from "../lib/read-stories";
 import { StoryItem } from "./StoryItem";
 import { LoadingNotice } from "./LoadingNotice";
@@ -212,12 +212,6 @@ export function StoryList({
         onStoryClick(stories[selectedIndex].id);
       }
     },
-    o: () => {
-      const story = stories[selectedIndex];
-      if (!story) return;
-      void markStoryRead(story.id, "external");
-      window.open(resolveStoryOpenUrl(story), "_blank", "noopener,noreferrer");
-    },
     "/": () => {
       persistCurrentFeedPosition();
       onSearch();
@@ -260,6 +254,18 @@ export function StoryList({
       window.location.assign(feedPath("jobs"));
     },
   });
+
+  useHotkeys(
+    {
+      o: () => {
+        const story = stories[selectedIndex];
+        if (!story) return;
+        void markStoryRead(story.id, "external");
+        openUrlInNewTab(resolveStoryOpenUrl(story));
+      },
+    },
+    { ignoreInputs: false },
+  );
 
   const showInitialLoading =
     !isRestoring && stories.length === 0 && (!allIds?.length || idsLoading || isLoading);

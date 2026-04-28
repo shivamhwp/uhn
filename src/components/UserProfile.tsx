@@ -9,7 +9,7 @@ import {
 } from "@phosphor-icons/react";
 import * as Popover from "@radix-ui/react-popover";
 import { useUser } from "../lib/hooks";
-import { formatDate, timeAgo, extractDomain } from "../lib/utils";
+import { formatDate, timeAgo, extractDomain, openUrlInNewTab } from "../lib/utils";
 import { useHotkeys } from "../lib/useHotkeys";
 import type { HNItem } from "../lib/types";
 import { useQueries } from "@tanstack/react-query";
@@ -95,7 +95,7 @@ function UserStoryItem({
                   type="button"
                   className="flex w-full items-center rounded-sm px-2 py-1.5 text-sm transition-colors hover:bg-accent-subtle hover:text-accent"
                   onClick={() => {
-                    window.open(story.url, "_blank", "noopener,noreferrer");
+                    openUrlInNewTab(story.url!);
                     void markStoryRead(story.id, "external");
                     setMenuOpen(false);
                   }}

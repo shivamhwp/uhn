@@ -3,7 +3,7 @@ import { useStore } from "@nanostores/react";
 import { DotsThreeVerticalIcon, CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react";
 import * as Popover from "@radix-ui/react-popover";
 import { useSearch } from "../lib/hooks";
-import { extractDomain, resolveStoryOpenUrl, timeAgo } from "../lib/utils";
+import { extractDomain, resolveStoryOpenUrl, openUrlInNewTab, timeAgo } from "../lib/utils";
 import { $searchPage, setSearchPageEntry } from "../lib/stores";
 import { useHotkeys } from "../lib/useHotkeys";
 import { $readStoryIds, markStoryRead, markStoryUnread } from "../lib/read-stories";
@@ -118,7 +118,7 @@ function SearchResultItem({
                     type="button"
                     className="flex w-full items-center rounded-sm px-2 py-1.5 text-sm transition-colors hover:bg-accent-subtle hover:text-accent"
                     onClick={() => {
-                      window.open(hit.url, "_blank", "noopener,noreferrer");
+                      openUrlInNewTab(hit.url!);
                       void markStoryRead(storyId, "external");
                       setMenuOpen(false);
                     }}
@@ -204,13 +204,6 @@ export function SearchResultsList({ query, onStoryClick, onUserClick }: Props) {
       void markStoryRead(Number(hit.objectID), "detail");
       onStoryClick(Number(hit.objectID));
     },
-    o: () => {
-      const hit = hits[selectedIndex];
-      if (!hit) return;
-      const id = Number(hit.objectID);
-      void markStoryRead(id, "external");
-      window.open(resolveStoryOpenUrl({ id, url: hit.url }), "_blank", "noopener,noreferrer");
-    },
     "[": () => {
       if (page > 0) {
         setPage((p) => p - 1);
@@ -224,6 +217,19 @@ export function SearchResultsList({ query, onStoryClick, onUserClick }: Props) {
       }
     },
   });
+
+  useHotkeys(
+    {
+      o: () => {
+        const hit = hits[selectedIndex];
+        if (!hit) return;
+        const id = Number(hit.objectID);
+        void markStoryRead(id, "external");
+        openUrlInNewTab(resolveStoryOpenUrl({ id, url: hit.url }));
+      },
+    },
+    { ignoreInputs: false },
+  );
 
   if (!query.trim()) {
     return (
