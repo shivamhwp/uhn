@@ -11,7 +11,7 @@
     "fmt": "oxfmt",
     "fmt:check": "oxfmt --check",
     "format": "bun run fmt",
-    "check": "bun run lint && bunx tsc --noEmit && bun run astro check",
+    "check": "bun run lint && bunx tsgo --noEmit && bun run astro check",
     "astro": "astro"
   },
   "dependencies": {
@@ -23,7 +23,7 @@
     "@radix-ui/react-context-menu": "^2.2.16",
     "@radix-ui/react-popover": "^1.1.15",
     "@tailwindcss/vite": "^4.2.4",
-    "@tanstack/hotkeys": "^0.8.0",
+    "@tanstack/react-hotkeys": "^0.10.0",
     "@tanstack/react-query": "^5.100.5",
     "@tanstack/react-query-persist-client": "^5.100.5",
     "@types/react": "^19.2.14",
@@ -45,6 +45,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.8",
+    "@typescript/native-preview": "^7.0.0-dev.20260421.2",
     "oxfmt": "^0.47.0",
     "oxlint": "^1.62.0",
     "typescript": "^6.0.3"
