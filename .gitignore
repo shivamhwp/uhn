@@ -1,6 +1,7 @@
 # build output
 dist/
 .vercel/
+.lakebed/
 .output/
 
 # generated types

@@ -259,6 +259,7 @@ body {
 }
 
 [data-sonner-toaster] {
+  --uhn-refresh-toast-width: 18rem;
   --normal-bg: var(--color-surface);
   --normal-bg-hover: var(--color-surface-hover);
   --normal-border: var(--color-edge);
@@ -300,4 +301,14 @@ body {
 [data-sonner-toast][data-styled="true"]:hover [data-close-button]:hover {
   background: var(--color-surface-hover);
   border-color: var(--color-edge);
+}
+
+@media (max-width: 600px) {
+  [data-sonner-toaster] {
+    --uhn-refresh-toast-width: calc(100vw - var(--mobile-offset-left) * 2);
+  }
+
+  [data-sonner-toast].uhn-refresh-toast {
+    max-width: var(--uhn-refresh-toast-width);
+  }
 }

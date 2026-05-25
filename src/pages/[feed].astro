@@ -1,8 +1,9 @@
 ---
-import { FeedIsland } from "../components/islands/FeedIsland";
+import { Font } from "astro:assets";
 import { feedLabels, feedOrder, isFeedType } from "../lib/feeds";
 import type { FeedType } from "../lib/types";
-import SiteLayout from "../layouts/SiteLayout.astro";
+import { SharedUhnApp } from "../shared/UhnApp";
+import "../styles/global.css";
 
 export const getStaticPaths = () => feedOrder.map((feed) => ({ params: { feed } }));
 
@@ -17,14 +18,45 @@ const feedType = feedParam as FeedType;
 
 {
   isFeedType(feedParam) ? (
-    <SiteLayout title={`${feedLabels[feedType]} | uhn`} activeFeed={feedType}>
-      <section class="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <FeedIsland client:only="react" feedType={feedType} />
-      </section>
-    </SiteLayout>
+    <html lang="en" class="h-full">
+      <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+        <title>{feedLabels[feedType]} | uhn</title>
+        <meta name="description" content="A keyboard-driven Hacker News client" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="manifest" href="/manifest.json" />
+        <Font cssVariable="--font-geist" preload />
+        <script is:inline>
+          (function() {
+            var t = localStorage.getItem('hn-theme');
+            if (!t) t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            document.documentElement.classList.toggle('dark', t === 'dark');
+          })();
+        </script>
+      </head>
+      <body class="min-h-full bg-bg">
+        <SharedUhnApp client:only="preact" initialFeed={feedType} />
+      </body>
+    </html>
   ) : (
-    <SiteLayout title="Not Found | uhn">
-      <div class="py-12 px-4 text-center text-sm text-fg-faint">Invalid feed.</div>
-    </SiteLayout>
+    <html lang="en" class="h-full">
+      <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Not Found | uhn</title>
+        <Font cssVariable="--font-geist" preload />
+        <script is:inline>
+          (function() {
+            var t = localStorage.getItem('hn-theme');
+            if (!t) t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            document.documentElement.classList.toggle('dark', t === 'dark');
+          })();
+        </script>
+      </head>
+      <body class="min-h-full bg-bg">
+        <div class="py-12 px-4 text-center text-sm text-fg-faint">Invalid feed.</div>
+      </body>
+    </html>
   )
 }

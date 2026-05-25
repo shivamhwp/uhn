@@ -14,17 +14,21 @@ import { ReadStateProvider } from "./ReadStateProvider";
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 const FIVE_MINUTES_MS = 5 * 60 * 1000;
 const QUERY_CACHE_KEY = "uhn:query-cache-v2";
+const refreshToastFrame = {
+  width: "var(--uhn-refresh-toast-width)",
+  padding: "0.875rem",
+} as const;
 const neutralToastStyle = {
+  ...refreshToastFrame,
   background: "var(--color-surface)",
   border: "1px solid var(--color-edge)",
   color: "var(--color-fg)",
-  padding: "0.875rem",
 } as const;
 const successToastStyle = {
+  ...refreshToastFrame,
   background: "var(--color-accent)",
   border: "1px solid var(--color-accent-hover)",
   color: "#fff",
-  padding: "0.875rem",
 } as const;
 const errorToastStyle = {
   background: "var(--color-surface)",
@@ -58,18 +62,25 @@ function ThemedToaster() {
 }
 
 const FetchingToast = () => (
-  <div className="flex min-w-0 flex-col gap-2 py-0.5">
-    <div className="text-sm font-medium text-fg">fetching latest stories.</div>
-    <div className="relative overflow-hidden">
-      <div className="flex w-max items-center gap-2 text-accent [animation:uhnCowMarquee_10s_linear_infinite]">
+  <div className="flex h-5 min-w-0 items-center gap-2">
+    <span className="shrink-0 text-sm font-medium text-fg">fetching latest stories.</span>
+    <div className="min-w-0 flex-1 overflow-hidden">
+      <div className="flex w-max items-center gap-1.5 text-accent [animation:uhnCowMarquee_10s_linear_infinite]">
         {cowIcons.map((index) => (
-          <CowIcon key={`cow-a-${index}`} size={16} weight="fill" />
+          <CowIcon key={`cow-a-${index}`} size={14} weight="fill" />
         ))}
         {cowIcons.map((index) => (
-          <CowIcon key={`cow-b-${index}`} size={16} weight="fill" />
+          <CowIcon key={`cow-b-${index}`} size={14} weight="fill" />
         ))}
       </div>
     </div>
+  </div>
+);
+
+const FetchedToast = () => (
+  <div className="flex h-5 min-w-0 items-center gap-2 text-sm font-medium text-white">
+    <ConfettiIcon size={16} weight="fill" color="white" />
+    <span>latest stories fetched.</span>
   </div>
 );
 
@@ -100,6 +111,7 @@ export function ReactProviders({ children }: { children: ReactNode }) {
       refreshing = true;
       window.dispatchEvent(new Event("uhn:refresh:start"));
       toastIdRef.current = toast.custom(() => <FetchingToast />, {
+        className: "uhn-refresh-toast",
         id: toastIdRef.current ?? undefined,
         style: neutralToastStyle,
       });
@@ -114,9 +126,9 @@ export function ReactProviders({ children }: { children: ReactNode }) {
         if (toastIdRef.current != null) {
           toast.dismiss(toastIdRef.current);
         }
-        toast.success("latest stories fetched.", {
+        toast.custom(() => <FetchedToast />, {
+          className: "uhn-refresh-toast",
           style: successToastStyle,
-          icon: <ConfettiIcon size={16} weight="fill" color="white" />,
         });
       } catch {
         if (toastIdRef.current != null) {

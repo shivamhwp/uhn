@@ -1,13 +1,17 @@
 // @ts-check
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig, fontProviders } from "astro/config";
+import preact from "@astrojs/preact";
 import react from "@astrojs/react";
 import vercel from "@astrojs/vercel";
 
 export default defineConfig({
   output: "static",
   adapter: vercel(),
-  integrations: [react()],
+  integrations: [
+    react({ exclude: [/src\/shared\/.*\.tsx$/] }),
+    preact({ include: [/src\/shared\/.*\.tsx$/] }),
+  ],
   fonts: [
     {
       provider: fontProviders.google(),
