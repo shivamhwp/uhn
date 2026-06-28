@@ -44,6 +44,14 @@ function Comment({ commentId, depth, onUserClick }: CommentProps) {
     <div className="comment-thread min-w-0" style={{ "--comment-depth": depth } as CSSProperties}>
       <div
         className="min-w-0 overflow-hidden border-l-2 py-1.5 pl-3 transition-colors"
+        onMouseDown={(event) =>
+          event.clientX - event.currentTarget.getBoundingClientRect().left <= 8 &&
+          event.preventDefault()
+        }
+        onClick={(event) =>
+          event.clientX - event.currentTarget.getBoundingClientRect().left <= 8 &&
+          setCollapsed(!collapsed)
+        }
         style={{ borderColor: collapsed ? "var(--color-edge)" : color }}
       >
         {/* Comment header */}
