@@ -1,4 +1,4 @@
-import { useRef, useState, type CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
 import { CaretDownIcon, CaretRightIcon, UserIcon } from "@phosphor-icons/react";
 import { useComments, useItem } from "../lib/hooks";
 import type { HNItem } from "../lib/types";
@@ -27,7 +27,6 @@ interface CommentProps {
 
 function Comment({ commentId, depth, onUserClick }: CommentProps) {
   const { data: comment } = useItem(commentId);
-  const startedInGuideZone = useRef(false);
   const [collapsed, setCollapsed] = useState(false);
   const [showReplies, setShowReplies] = useState(false);
 
@@ -44,22 +43,20 @@ function Comment({ commentId, depth, onUserClick }: CommentProps) {
   return (
     <div className="comment-thread min-w-0" style={{ "--comment-depth": depth } as CSSProperties}>
       <div
-        className="min-w-0 overflow-hidden border-l-2 py-1.5 pl-3 transition-colors"
-        onMouseDown={(event) => {
-          const offset = event.clientX - event.currentTarget.getBoundingClientRect().left;
-          startedInGuideZone.current = offset >= 0 && offset <= 8;
-          if (startedInGuideZone.current) event.preventDefault();
-        }}
-        onMouseLeave={() => {
-          startedInGuideZone.current = false;
-        }}
-        onClick={() => {
-          if (!startedInGuideZone.current) return;
-          startedInGuideZone.current = false;
-          setCollapsed((value) => !value);
-        }}
-        style={{ borderColor: collapsed ? "var(--color-edge)" : color }}
+        className="relative min-w-0 overflow-hidden py-1.5 pl-3"
+        style={
+          { "--comment-guide-color": collapsed ? "var(--color-edge)" : color } as CSSProperties
+        }
       >
+        <button
+          type="button"
+          aria-label={collapsed ? "Expand comment thread" : "Collapse comment thread"}
+          onClick={() => setCollapsed((value) => !value)}
+          className="group absolute inset-y-1.5 left-0 w-3 cursor-pointer rounded-sm focus:outline-none focus-visible:ring-1 focus-visible:ring-accent/60"
+        >
+          <span className="absolute inset-y-0 left-0 block w-0.5 rounded-full bg-[var(--comment-guide-color)] transition-[width] duration-150 group-hover:w-1 group-focus-visible:w-1" />
+        </button>
+
         {/* Comment header */}
         <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-base">
           <button
