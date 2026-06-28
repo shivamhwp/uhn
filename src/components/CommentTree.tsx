@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from "react";
+import { useRef, useState, type CSSProperties } from "react";
 import { CaretDownIcon, CaretRightIcon, UserIcon } from "@phosphor-icons/react";
 import { useComments, useItem } from "../lib/hooks";
 import type { HNItem } from "../lib/types";
@@ -27,6 +27,7 @@ interface CommentProps {
 
 function Comment({ commentId, depth, onUserClick }: CommentProps) {
   const { data: comment } = useItem(commentId);
+  const startedInGuideZone = useRef(false);
   const [collapsed, setCollapsed] = useState(false);
   const [showReplies, setShowReplies] = useState(false);
 
@@ -44,14 +45,19 @@ function Comment({ commentId, depth, onUserClick }: CommentProps) {
     <div className="comment-thread min-w-0" style={{ "--comment-depth": depth } as CSSProperties}>
       <div
         className="min-w-0 overflow-hidden border-l-2 py-1.5 pl-3 transition-colors"
-        onMouseDown={(event) =>
-          event.clientX - event.currentTarget.getBoundingClientRect().left <= 8 &&
-          event.preventDefault()
-        }
-        onClick={(event) =>
-          event.clientX - event.currentTarget.getBoundingClientRect().left <= 8 &&
-          setCollapsed(!collapsed)
-        }
+        onMouseDown={(event) => {
+          const offset = event.clientX - event.currentTarget.getBoundingClientRect().left;
+          startedInGuideZone.current = offset >= 0 && offset <= 8;
+          if (startedInGuideZone.current) event.preventDefault();
+        }}
+        onMouseLeave={() => {
+          startedInGuideZone.current = false;
+        }}
+        onClick={() => {
+          if (!startedInGuideZone.current) return;
+          startedInGuideZone.current = false;
+          setCollapsed((value) => !value);
+        }}
         style={{ borderColor: collapsed ? "var(--color-edge)" : color }}
       >
         {/* Comment header */}
